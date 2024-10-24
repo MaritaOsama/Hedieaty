@@ -1,6 +1,24 @@
 import 'package:flutter/material.dart';
+import 'gift_list.dart';
+import 'event_list.dart';
+
+class Friend {
+  final String name;
+  final String avatar;
+  final int upcomingEvents;
+
+  Friend({required this.name, required this.avatar, required this.upcomingEvents});
+}
+
 
 class HomePage extends StatelessWidget{
+  final List<Friend> friends = [
+    Friend(name: 'Alice', avatar: 'asset/Female_Icon (2).png', upcomingEvents: 1),
+    Friend(name: 'Bob', avatar: 'asset/Male_Icon.png', upcomingEvents: 2),
+    Friend(name: 'Charlie', avatar: 'asset/Male_Icon.png', upcomingEvents: 0),
+  ];
+
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
@@ -35,26 +53,35 @@ class HomePage extends StatelessWidget{
         ],
         // Ensuring title remains centered
       ),
-      body: Column(
-        children: [
-          ListTile(
-            title: Text("Friend's Name"),
-            subtitle: Text("Upcoming Events: 1"),
+      body: ListView.builder(
+        itemCount: friends.length,
+        itemBuilder: (context, index) {
+          final friend = friends[index];
+          return ListTile(
+            title: Text(friend.name),  // Friend's name is shown here
+            subtitle: Text(friend.upcomingEvents > 0
+                ? 'Upcoming Events: ${friend.upcomingEvents}'
+                : 'No Upcoming Events'),
             leading: CircleAvatar(
-              backgroundImage: AssetImage('asset/Female_Icon (2).png'),
+              backgroundImage: AssetImage(friend.avatar),
             ),
             onTap: () {
-              Navigator.pushNamed(context, '/events');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GiftListPage(friendName: friend.name), // Pass the name directly
+                ),
+              );
             },
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/events');
-              },
-              child: Text('Create an Event'),
-          )
-        ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/events');
+        },
+        child: Icon(Icons.add),
+        tooltip: 'Create an Event',
       ),
     );
   }

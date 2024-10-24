@@ -22,7 +22,7 @@ class HedieatyApp extends StatelessWidget{
       routes: {
         '/': (context) => HomePage(),
         '/events': (context) => EventListPage(),
-        '/gifts': (context) => GiftListPage(),
+        '/gifts': (context) => GiftListPage(friendName: '',),
         '/giftsDetails': (context) => GiftDetailsPage(),
         '/profile': (context) => ProfilePage(),
         '/pledgedGifts': (context) => PledgedGiftsPage(),
