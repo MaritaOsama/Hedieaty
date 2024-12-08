@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'gift_details.dart';
-import 'gift_list.dart';
-import 'event_list.dart';
-import 'pledged_gifts.dart';
-import 'profile.dart';
+import 'screens/home_page.dart';
+import 'screens/gift_details.dart';
+import 'screens/gift_list.dart';
+import 'screens/event_list.dart';
+import 'screens/pledged_gifts.dart';
+import 'screens/profile.dart';
 
 void main() {
   runApp(HedieatyApp());
