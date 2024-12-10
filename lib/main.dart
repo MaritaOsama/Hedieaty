@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/welcome_page.dart';
 import 'screens/home_page.dart';
 import 'screens/gift_details.dart';
 import 'screens/gift_list.dart';
@@ -20,7 +21,7 @@ class HedieatyApp extends StatelessWidget{
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => HomePage(),
+        '/': (context) => WelcomePage(),
         '/events': (context) => EventListPage(),
         '/gifts': (context) => GiftListPage(friendName: '',),
         '/giftsDetails': (context) => GiftDetailsPage(),
@@ -30,5 +31,3 @@ class HedieatyApp extends StatelessWidget{
     );
   }
 }
-
-//try to commit
