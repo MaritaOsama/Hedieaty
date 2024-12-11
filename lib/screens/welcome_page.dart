@@ -13,7 +13,7 @@ class _WelcomePageState extends State<WelcomePage> {
     super.initState();
 
     // Navigate to home page after 3 seconds
-    Timer(Duration(seconds: 3), () {
+    Timer(Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
@@ -26,21 +26,22 @@ class _WelcomePageState extends State<WelcomePage> {
     return Scaffold(
       backgroundColor: Colors.white, // Customize background color
       body: Center(
-        child: Column(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               'Hedieaty',
               style: TextStyle(
-                fontSize: 40,
+                fontSize: 45,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
+                fontFamily: "Parkinsans",
               ),
             ),
             SizedBox(height: 20),
             Icon(
               Icons.card_giftcard,
-              size: 60,
+              size: 65,
               color: Colors.deepPurple,
             ),
           ],

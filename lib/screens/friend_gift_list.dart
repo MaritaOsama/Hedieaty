@@ -10,21 +10,21 @@ class Gift {
 }
 
 
-class GiftListPage extends StatefulWidget {
+class FGiftListPage extends StatefulWidget {
   final String friendName;
 
-  GiftListPage({required this.friendName});
+  FGiftListPage({required this.friendName});
 
   @override
-  _GiftListPageState createState() => _GiftListPageState();
+  _FGiftListPageState createState() => _FGiftListPageState();
 }
 
-class _GiftListPageState extends State<GiftListPage> {
+class _FGiftListPageState extends State<FGiftListPage> {
   // Sample list of gifts
   List<Gift> gifts = [
-    Gift(name: "Laptop", category: "Electronics"),
-    Gift(name: "Book", category: "Books", isPledged: true),
-    Gift(name: "Watch", category: "Accessories"),
+    Gift(name: "Phone", category: "Electronics"),
+    Gift(name: "Kindle", category: "Books", isPledged: true),
+    Gift(name: "Braclet", category: "Accessories"),
   ];
 
   String sortBy = "name"; // Default sorting criteria
@@ -69,15 +69,10 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.friendName}'s Gift List"),
-        actions: [
-          // Add gift button
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _addGift,
-            tooltip: "Add a new gift",
-          ),
-        ],
+        title: Text("${widget.friendName}'s Gift List",
+        style: TextStyle(
+          fontFamily: "Parkinsans",
+        ),),
       ),
       body: Column(
         children: [
@@ -88,21 +83,30 @@ class _GiftListPageState extends State<GiftListPage> {
               Flexible(
                 child: ElevatedButton(
                   onPressed: () => _sortGifts('name'),
-                  child: Text('Sort by Name'),
+                  child: Text('Sort by Name',
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                  ),),
                 ),
               ),
               SizedBox(width: 10),
               Flexible(
                 child: ElevatedButton(
                   onPressed: () => _sortGifts('category'),
-                  child: Text('Sort by Category'),
+                  child: Text('Sort by Category',
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                  ),),
                 ),
               ),
               SizedBox(width: 10),
               Flexible(
                 child: ElevatedButton(
                   onPressed: () => _sortGifts('status'),
-                  child: Text('Sort by Status'),
+                  child: Text('Sort by Status',
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                  ),),
                 ),
               ),
             ],
@@ -117,6 +121,7 @@ class _GiftListPageState extends State<GiftListPage> {
                     gift.name,
                     style: TextStyle(
                       color: gift.isPledged ? Colors.grey : Colors.black,
+                      fontFamily: "Parkinsans",
                     ),
                   ),
                   subtitle: Text(gift.category),

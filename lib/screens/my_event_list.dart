@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
+import 'my_gift_list.dart';
 
 class Event {
   String name;
@@ -78,7 +80,10 @@ class _EventListPageState extends State<EventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Events List"),
+        title: Text("Events List",
+        style: TextStyle(
+          fontFamily: "Parkinsans",
+        ),),
         actions: [
           IconButton(
             icon: Icon(Icons.add),
@@ -95,19 +100,28 @@ class _EventListPageState extends State<EventListPage> {
             children: [
               Flexible(child: ElevatedButton(
                 onPressed: () => _sortEvents('name'),
-                child: Text('Sort by Name'),
+                child: Text('Sort by Name',
+                style: TextStyle(
+                  fontFamily: "Parkinsans",
+                ),),
               ),
               ),
               SizedBox(width: 10),
               Flexible(child: ElevatedButton(
                 onPressed: () => _sortEvents('category'),
-                child: Text('Sort by Category'),
+                child: Text('Sort by Category',
+                style: TextStyle(
+                  fontFamily: "Parkinsans",
+                ),),
               ),
               ),
               SizedBox(width: 10),
               Flexible(child: ElevatedButton(
                 onPressed: () => _sortEvents('status'),
-                child: Text('Sort by Status'),
+                child: Text('Sort by Status',
+                style: TextStyle(
+                  fontFamily: "Parkinsans",
+                ),),
               ),
               ),
             ],
@@ -118,8 +132,14 @@ class _EventListPageState extends State<EventListPage> {
               itemBuilder: (context, index) {
                 final event = events[index];
                 return ListTile(
-                  title: Text(event.name),
-                  subtitle: Text("${event.category} - ${event.status}"),
+                  title: Text(event.name,
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                  ),),
+                  subtitle: Text("${event.category} - ${event.status}",
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                  ),),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -145,6 +165,44 @@ class _EventListPageState extends State<EventListPage> {
                 );
               },
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => EventListPage()),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => GiftListPage(friendName: 'Friend Placeholder')),
+              );
+              break;
+          }
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event),
+            label: 'Events',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.card_giftcard),
+            label: 'Gifts',
           ),
         ],
       ),
