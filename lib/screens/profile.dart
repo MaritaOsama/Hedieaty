@@ -56,7 +56,7 @@ class ProfilePage extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: () {
-                    // Navigate to create a new event screen
+                    _showNewEventDialog(context);
                   },
                   icon: Icon(Icons.event, color: Colors.deepPurple),
                   label: Text(
@@ -67,13 +67,12 @@ class ProfilePage extends StatelessWidget {
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    //primary: Colors.blueAccent,
                   ),
                 ),
                 SizedBox(width: 20),
                 ElevatedButton.icon(
                   onPressed: () {
-                    // Navigate to edit profile screen
+                    _showEditProfileDialog(context);
                   },
                   icon: Icon(Icons.edit, color: Colors.deepPurple),
                   label: Text(
@@ -84,7 +83,6 @@ class ProfilePage extends StatelessWidget {
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    //primary: Colors.blueAccent,
                   ),
                 ),
               ],
@@ -149,7 +147,6 @@ class ProfilePage extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                //primary: Colors.blueAccent,
               ),
             ),
             SizedBox(height: 10),
@@ -198,6 +195,112 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // New Event Dialog
+  void _showNewEventDialog(BuildContext context) {
+    TextEditingController eventNameController = TextEditingController();
+    TextEditingController categoryController = TextEditingController();
+    TextEditingController dateController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Create New Event'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: eventNameController,
+                decoration: InputDecoration(labelText: 'Event Name'),
+              ),
+              TextField(
+                controller: categoryController,
+                decoration: InputDecoration(labelText: 'Category'),
+              ),
+              TextField(
+                controller: dateController,
+                decoration: InputDecoration(labelText: 'Event Date'),
+                keyboardType: TextInputType.datetime,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Save the event
+                print('Event Saved: ${eventNameController.text}');
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Edit Profile Dialog
+  void _showEditProfileDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController ageController = TextEditingController();
+    TextEditingController genderController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: ageController,
+                decoration: InputDecoration(labelText: 'Age'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: genderController,
+                decoration: InputDecoration(labelText: 'Gender'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Save the profile changes
+                print('Profile Saved: ${nameController.text}');
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
