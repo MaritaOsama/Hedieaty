@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'friend_gift_details_page.dart';
 import 'home_page.dart';
 
-class Gift {
+class FGift {
   String name;
   String category;
   bool isPledged;
 
-  Gift({required this.name, required this.category, this.isPledged = false});
+  FGift({required this.name, required this.category, this.isPledged = false});
 }
-
 
 class FGiftListPage extends StatefulWidget {
   final String friendName;
@@ -20,16 +20,14 @@ class FGiftListPage extends StatefulWidget {
 }
 
 class _FGiftListPageState extends State<FGiftListPage> {
-  // Sample list of gifts
-  List<Gift> gifts = [
-    Gift(name: "Phone", category: "Electronics"),
-    Gift(name: "Kindle", category: "Books", isPledged: true),
-    Gift(name: "Braclet", category: "Accessories"),
+  List<FGift> gifts = [
+    FGift(name: "Phone", category: "Electronics"),
+    FGift(name: "Kindle", category: "Books", isPledged: true),
+    FGift(name: "Bracelet", category: "Accessories"),
   ];
 
-  String sortBy = "name"; // Default sorting criteria
+  String sortBy = "name";
 
-  // Function to sort the gift list
   void _sortGifts(String criteria) {
     setState(() {
       sortBy = criteria;
@@ -43,21 +41,18 @@ class _FGiftListPageState extends State<FGiftListPage> {
     });
   }
 
-  // Function to add a new gift
   void _addGift() {
     setState(() {
-      gifts.add(Gift(name: "New Gift", category: "Uncategorized"));
+      gifts.add(FGift(name: "New Gift", category: "Uncategorized"));
     });
   }
 
-  // Function to delete a gift
   void _deleteGift(int index) {
     setState(() {
       gifts.removeAt(index);
     });
   }
 
-  // Function to edit a gift
   void _editGift(int index, String newName, String newCategory) {
     setState(() {
       gifts[index].name = newName;
@@ -69,86 +64,104 @@ class _FGiftListPageState extends State<FGiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.friendName}'s Gift List",
-        style: TextStyle(
-          fontFamily: "Parkinsans",
-        ),),
+        title: Text(
+          "${widget.friendName}'s Gift List",
+          style: TextStyle(fontFamily: "Parkinsans"),
+        ),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Column(
         children: [
-          // Sorting buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () => _sortGifts('name'),
-                  child: Text('Sort by Name',
-                  style: TextStyle(
-                    fontFamily: "Parkinsans",
-                  ),),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                DropdownButton<String>(
+                  value: sortBy,
+                  icon: Icon(Icons.sort),
+                  elevation: 16,
+                  style: TextStyle(color: Colors.blue, fontFamily: "Parkinsans"),
+                  underline: Container(
+                    height: 2,
+                    color: Colors.blue,
+                  ),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      _sortGifts(newValue);
+                    }
+                  },
+                  items: [
+                    DropdownMenuItem(value: "name", child: Text("Sort by Name")),
+                    DropdownMenuItem(value: "category", child: Text("Sort by Category")),
+                    DropdownMenuItem(value: "status", child: Text("Sort by Status")),
+                  ],
                 ),
-              ),
-              SizedBox(width: 10),
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () => _sortGifts('category'),
-                  child: Text('Sort by Category',
-                  style: TextStyle(
-                    fontFamily: "Parkinsans",
-                  ),),
-                ),
-              ),
-              SizedBox(width: 10),
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () => _sortGifts('status'),
-                  child: Text('Sort by Status',
-                  style: TextStyle(
-                    fontFamily: "Parkinsans",
-                  ),),
-                ),
-              ),
-            ],
+                ElevatedButton(
+                  onPressed: _addGift,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  child: Text(
+                    "Add Gift",
+                    style: TextStyle(fontFamily: "Parkinsans"),
+                  ),
+                )
+              ],
+            ),
           ),
           Expanded(
             child: ListView.builder(
               itemCount: gifts.length,
               itemBuilder: (context, index) {
                 final gift = gifts[index];
-                return ListTile(
-                  title: Text(
-                    gift.name,
-                    style: TextStyle(
-                      color: gift.isPledged ? Colors.grey : Colors.black,
-                      fontFamily: "Parkinsans",
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    title: Text(
+                      gift.name,
+                      style: TextStyle(
+                        color: gift.isPledged ? Colors.grey : Colors.black,
+                        fontFamily: "Parkinsans",
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    subtitle: Text(
+                      gift.category,
+                      style: TextStyle(fontFamily: "Parkinsans"),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: gift.isPledged
+                              ? null
+                              : () {
+                            _editGift(index, "Edited Gift", "Edited Category");
+                          },
+                          color: gift.isPledged ? Colors.grey : Colors.blue,
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteGift(index);
+                          },
+                          color: Colors.red,
+                        ),
+                      ],
+                    ),
+                    tileColor: gift.isPledged ? Colors.lightGreen[100] : Colors.white,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FGiftDetailsPage(gift: gift),
+                        ),
+                      );
+                    },
                   ),
-                  subtitle: Text(gift.category),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Edit button (disabled if pledged)
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: gift.isPledged
-                            ? null
-                            : () {
-                          _editGift(index, "Edited Gift", "Edited Category");
-                        },
-                        color: gift.isPledged ? Colors.grey : Colors.blue,
-                      ),
-                      // Delete button
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          _deleteGift(index);
-                        },
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
-                  tileColor: gift.isPledged ? Colors.lightGreen[100] : Colors.white,
                 );
               },
             ),
@@ -158,5 +171,3 @@ class _FGiftListPageState extends State<FGiftListPage> {
     );
   }
 }
-
-//try to commit

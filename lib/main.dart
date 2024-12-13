@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/screens/friend_event_list_page.dart';
+import 'package:hedieaty/screens/friend_gift_details_page.dart';
 import 'package:hedieaty/screens/friend_gift_list.dart';
+import 'package:hedieaty/screens/login_page.dart';
+import 'package:hedieaty/screens/signup_page.dart';
 import 'package:hedieaty/screens/welcome_page.dart';
 import 'screens/home_page.dart';
 import 'screens/my_gift_details.dart';
@@ -25,13 +28,17 @@ class HedieatyApp extends StatelessWidget{
       initialRoute: '/',
       routes: {
         '/': (context) => WelcomePage(),
+        '/login': (context) => LoginPage(),
+        '/signup': (context) => SignupPage(),
+        '/home': (context) => HomePage(),
         '/events': (context) => FEventListPage(friendName: ''),
         '/gifts': (context) => FGiftListPage(friendName: ''),
-        '/giftsDetails': (context) => GiftDetailsPage(gift: gift),
+        '/giftsDetails': (context) => FGiftDetailsPage(gift: gift),
         '/profile': (context) => ProfilePage(),
-        '/pledgedGifts': (context) => PledgedGiftsPage(),
+        '/pledgedGifts': (context) => MyPledgedGiftsPage(),
         '/myGifts': (context) => GiftListPage(friendName: ''),
-        '/myEvents': (context) => EventListPage()
+        '/myEvents': (context) => EventListPage(),
+        '/myGiftDetails': (context) => GiftDetailsPage(gift: gift),
       },
     );
   }

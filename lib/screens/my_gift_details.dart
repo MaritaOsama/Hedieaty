@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/screens/my_event_list.dart';
+import 'package:hedieaty/screens/profile.dart';
 import 'my_gift_list.dart';
 import 'home_page.dart';
-
 
 class GiftDetailsPage extends StatelessWidget {
   final Gift gift;
@@ -13,12 +13,16 @@ class GiftDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift Details',
-        style: TextStyle(
-          fontFamily: "Parkinsans",
-        ),),
+        title: Text(
+          'Gift Details',
+          style: TextStyle(
+            fontFamily: "Parkinsans",
+          ),
+        ),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.grey[200], // Adding a light background color
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,23 +30,42 @@ class GiftDetailsPage extends StatelessWidget {
             Text(
               'Gift Name: ${gift.name}',
               style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "Parkinsans"),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: "Parkinsans",
+              ),
             ),
             SizedBox(height: 10),
             Text(
               'Category: ${gift.category}',
               style: TextStyle(
-                  fontSize: 18,
-                  fontFamily: "Parkinsans"),
+                fontSize: 18,
+                fontFamily: "Parkinsans",
+              ),
             ),
             SizedBox(height: 10),
             Text(
               'Status: ${gift.isPledged ? "Pledged" : "Not Pledged"}',
               style: TextStyle(
-                  fontSize: 18,
-                  fontFamily: "Parkinsans"),
+                fontSize: 18,
+                fontFamily: "Parkinsans",
+              ),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  // Add action for pledge or other functionality
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: gift.isPledged ? Colors.grey : Colors.green,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: Text(
+                  gift.isPledged ? "Pledged" : "Pledge Now",
+                  style: TextStyle(fontFamily: "Parkinsans", fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),
@@ -65,11 +88,15 @@ class GiftDetailsPage extends StatelessWidget {
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => GiftListPage(friendName: 'Friend Placeholder')),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ProfilePage(),
+                ),
               );
               break;
           }
         },
+        currentIndex: 2, // Highlight the "Gifts" tab as the current page
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -80,8 +107,8 @@ class GiftDetailsPage extends StatelessWidget {
             label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.card_giftcard),
-            label: 'Gifts',
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),

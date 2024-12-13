@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/friend_gift_list.dart';
+import 'package:hedieaty/screens/profile.dart';
 import 'home_page.dart';
 import 'my_gift_list.dart';
 import 'my_event_list.dart';
@@ -35,8 +37,12 @@ class FEventListPage extends StatefulWidget {
 
 class _FEventListPageState extends State<FEventListPage> {
   List<Event> events = [
-    Event(name: "Grad", category: "Celebration", date: DateTime.now().add(Duration(days: 7))),
-    Event(name: "Meeting", category: "Work", date: DateTime.now().add(Duration(days: -2))),
+    Event(name: "Grad",
+        category: "Celebration",
+        date: DateTime.now().add(Duration(days: 7))),
+    Event(name: "Meeting",
+        category: "Work",
+        date: DateTime.now().add(Duration(days: -2))),
     Event(name: "Lecture", category: "Education", date: DateTime.now()),
   ];
 
@@ -59,7 +65,8 @@ class _FEventListPageState extends State<FEventListPage> {
   // Function to add a new event
   void _addEvent() {
     setState(() {
-      events.add(Event(name: "New Event", category: "General", date: DateTime.now()));
+      events.add(
+          Event(name: "New Event", category: "General", date: DateTime.now()));
     });
   }
 
@@ -71,72 +78,140 @@ class _FEventListPageState extends State<FEventListPage> {
   }
 
   // Function to edit an event
-  void _editEvent(int index, String newName, String newCategory, DateTime newDate) {
+  void _editEvent(int index, String newName, String newCategory,
+      DateTime newDate) {
     setState(() {
       events[index].name = newName;
       events[index].category = newCategory;
       events[index].date = newDate;
-      events[index].status = Event._determineStatus(newDate); // Update status based on new date
+      events[index].status =
+          Event._determineStatus(newDate); // Update status based on new date
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.friendName}'s Events List",
-        style: TextStyle(
-          fontFamily: "Parkinsans",
-        ),),
+        title: Text(
+          "${widget.friendName}'s Events List",
+          style: TextStyle(
+            fontFamily: "Parkinsans",
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Column(
         children: [
-          // Sorting buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(child: ElevatedButton(
-                onPressed: () => _sortEvents('name'),
-                child: Text('Sort by Name',
+          // Header Section
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+            ),
+            child: Center(
+              child: Text(
+                "Explore ${widget.friendName}'s Events",
                 style: TextStyle(
                   fontFamily: "Parkinsans",
-                ),),
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: ElevatedButton(
-                onPressed: () => _sortEvents('category'),
-                child: Text('Sort by Category',
-                style: TextStyle(
-                  fontFamily: "Parkinsans",
-                ),),
-              ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: ElevatedButton(
-                onPressed: () => _sortEvents('status'),
-                child: Text('Sort by Status',
-                style: TextStyle(
-                  fontFamily: "Parkinsans",
-                ),),
-              ),
-              ),
-            ],
+            ),
           ),
+          SizedBox(height: 16),
+
+          // Dropdown for Sorting
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonFormField<String>(
+              value: sortBy,
+              items: [
+                DropdownMenuItem(
+                  value: 'name',
+                  child: Text('Sort by Name'),
+                ),
+                DropdownMenuItem(
+                  value: 'category',
+                  child: Text('Sort by Category'),
+                ),
+                DropdownMenuItem(
+                  value: 'status',
+                  child: Text('Sort by Status'),
+                ),
+              ],
+              onChanged: (String? value) {
+                if (value != null) {
+                  _sortEvents(value);
+                }
+              },
+              decoration: InputDecoration(
+                labelText: "Sort Events",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+
+          // Event List
           Expanded(
             child: ListView.builder(
               itemCount: events.length,
               itemBuilder: (context, index) {
                 final event = events[index];
-                return ListTile(
-                  title: Text(event.name,
-                  style: TextStyle(
-                    fontFamily: "Parkinsans",
-                  ),),
-                  subtitle: Text("${event.category} - ${event.status}",
-                  style: TextStyle(
-                    fontFamily: "Parkinsans",
-                  ),),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.event,
+                        color: event.status == "Upcoming"
+                            ? Colors.green
+                            : event.status == "Past"
+                            ? Colors.grey
+                            : Colors.blue,
+                        size: 40,
+                      ),
+                      title: Text(
+                        event.name,
+                        style: TextStyle(
+                          fontFamily: "Parkinsans",
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "${event.category} - ${event.status}",
+                        style: TextStyle(
+                          fontFamily: "Parkinsans",
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      trailing: Icon(Icons.arrow_forward_ios, size: 18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                FGiftListPage(friendName: widget.friendName),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 );
               },
             ),
@@ -161,7 +236,10 @@ class _FEventListPageState extends State<FEventListPage> {
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => GiftListPage(friendName: 'Friend Placeholder')),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ProfilePage(),
+                ),
               );
               break;
           }
@@ -176,13 +254,11 @@ class _FEventListPageState extends State<FEventListPage> {
             label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.card_giftcard),
-            label: 'Gifts',
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
     );
   }
 }
-
-//try to commit

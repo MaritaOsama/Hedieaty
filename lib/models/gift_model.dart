@@ -5,6 +5,7 @@ class Gift {
   String? category;
   double? price;
   String? image;
+  bool isPledged;
 
   Gift({
     this.id,
@@ -13,6 +14,7 @@ class Gift {
     this.category,
     this.price,
     this.image,
+    required this.isPledged,
   });
 
   factory Gift.fromMap(Map<String, dynamic> json) => Gift(
@@ -22,6 +24,7 @@ class Gift {
     category: json['CATEGORY'],
     price: json['PRICE'],
     image: json['IMAGE'],
+    isPledged: json['ISPLEDGED']
   );
 
   Map<String, dynamic> toMap() => {
@@ -31,5 +34,6 @@ class Gift {
     'CATEGORY': category,
     'PRICE': price,
     'IMAGE': image,
+    'ISPLEDGED': isPledged,
   };
 }
