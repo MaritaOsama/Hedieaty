@@ -28,59 +28,59 @@ class DatabaseClass {
           // Users Table
           batch.execute('''
           CREATE TABLE Users (
-          ID INTEGER PRIMARY KEY AUTOINCREMENT,
-          FIRST_NAME TEXT NOT NULL,
-          LAST_NAME TEXT NOT NULL,
-          NUMBER TEXT,
-          EMAIL TEXT UNIQUE NOT NULL,
-          PASSWORD TEXT NOT NULL,
-          IMAGE NOT NULL
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          first_name TEXT NOT NULL,
+          last_name TEXT NOT NULL,
+          number TEXT,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          image NOT NULL
           )
           ''');
 
           //List/Events Table
           batch.execute('''
           CREATE TABLE List_Events (
-          ID INTEGER PRIMARY KEY AUTOINCREMENT,
-          NAME TEXT NOT NULL,
-          LIST_DETAILS_ID INTEGER,
-          USER_ID INTEGER NOT NULL,
-          STATUS TEXT NOT NULL DEFAULT 'open',
-          FOREIGN KEY (USER_ID) REFERENCES Users (ID)
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          list_details_id INTEGER,
+          user_id INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'open',
+          FOREIGN KEY (user_id) REFERENCES Users (id)
           )
           ''');
 
           //Friends Table
           batch.execute('''
           CREATE TABLE Friends (
-          USER_ID INTEGER NOT NULL,
-          FRIEND_ID INTEGER NOT NULL,
-          FOREIGN KEY (USER_ID) REFERENCES Users (ID),
-          FOREIGN KEY (FRIEND_ID) REFERENCES Users (ID)
+          user_id INTEGER NOT NULL,
+          friend_id INTEGER NOT NULL,
+          FOREIGN KEY (user_is) REFERENCES Users id),
+          FOREIGN KEY (friend_id) REFERENCES Users (id)
           )  
           ''');
 
           //Gift Table
           batch.execute('''
           CREATE TABLE Gifts (
-          ID INTEGER PRIMARY KEY AUTOINCREMENT,
-          NAME TEXT NOT NULL,
-          DESCRIPTION TEXT,
-          CATEGORY TEXT,
-          PRICE REAL,
-          IMAGE TEXT
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          category TEXT,
+          price TEXT,
+          image TEXT
           )
           ''');
 
           //Details List/Events List Table
           batch.execute('''
           CREATE TABLE List_Event_Details (
-          ID INTEGER PRIMARY KEY AUTOINCREMENT,
-          LIST_ID INTEGER NOT NULL,
-          GIFT_ID INTEGER NOT NULL,
-          STATUS TEXT NOT NULL DEFAULT 'available',
-          FOREIGN KEY (LIST_ID) REFERENCES List_Events (ID),
-          FOREIGN KEY (PLEDGED_ID) REFERENCES Users (ID)
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          list_id INTEGER NOT NULL,
+          gift_id INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'available',
+          FOREIGN KEY (list_id) REFERENCES List_Events (id),
+          FOREIGN KEY (pledged_id) REFERENCES Users (id)
           )
           ''');
 

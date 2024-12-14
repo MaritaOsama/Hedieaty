@@ -236,10 +236,7 @@ class _FEventListPageState extends State<FEventListPage> {
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ProfilePage(),
-                ),
+                MaterialPageRoute(builder: (context) => ProfilePage()),
               );
               break;
           }

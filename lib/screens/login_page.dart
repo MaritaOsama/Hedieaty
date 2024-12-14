@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,10 +11,22 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Logic to handle login can go here (e.g., API call or local validation)
-      Navigator.pushReplacementNamed(context, '/home'); // Navigates to HomePage
+      try {
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        // Handle login error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -46,9 +59,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-            SizedBox(height: 40), // Add space between the title and form
-
-            // Container for login form with decoration
+            SizedBox(height: 40),
+            // Form
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -83,7 +95,6 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 16),
-
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
@@ -101,7 +112,6 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 20),
-
                     // Login Button
                     ElevatedButton(
                       onPressed: _login,
@@ -116,7 +126,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 10),
-
                     // Sign Up Button
                     TextButton(
                       onPressed: () {

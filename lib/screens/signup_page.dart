@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -11,10 +13,34 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  void _signup() {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  Future<void> _signup() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Logic to handle signup can go here (e.g., API call or local validation)
-      Navigator.pushReplacementNamed(context, '/home'); // Navigates to HomePage
+      try {
+        // Create user with email and password
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        // Save additional user data to Firestore
+        FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+        await firestore.collection('users').doc(userCredential.user?.uid).set({
+          'email': userCredential.user?.email,
+          'name': 'User Name', // Replace with actual user input
+        });
+
+        // Navigate to home page
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -47,8 +73,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ],
             ),
-            SizedBox(height: 40), // Add space between the title and form
-
+            SizedBox(height: 40),
             // Container for signup form with decoration
             Container(
               padding: EdgeInsets.all(16),
@@ -84,7 +109,6 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 16),
-
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
@@ -102,7 +126,6 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 16),
-
                     // Confirm Password Field
                     TextFormField(
                       controller: _confirmPasswordController,
@@ -123,7 +146,6 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 20),
-
                     // Sign Up Button
                     ElevatedButton(
                       onPressed: _signup,
@@ -138,7 +160,6 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     SizedBox(height: 10),
-
                     // Login Button (Redirect to Login Page)
                     TextButton(
                       onPressed: () {

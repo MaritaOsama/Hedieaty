@@ -1,10 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/screens/friend_event_list_page.dart';
-import 'package:hedieaty/screens/friend_gift_details_page.dart';
-import 'package:hedieaty/screens/friend_gift_list.dart';
-import 'package:hedieaty/screens/login_page.dart';
-import 'package:hedieaty/screens/signup_page.dart';
-import 'package:hedieaty/screens/welcome_page.dart';
+
+import 'screens/friend_event_list_page.dart';
+import 'screens/friend_gift_details_page.dart';
+import 'screens/friend_gift_list.dart';
+import 'screens/login_page.dart';
+import 'screens/signup_page.dart';
+import 'screens/welcome_page.dart';
 import 'screens/home_page.dart';
 import 'screens/my_gift_details.dart';
 import 'screens/my_gift_list.dart';
@@ -12,7 +14,10 @@ import 'screens/my_event_list.dart';
 import 'screens/pledged_gifts.dart';
 import 'screens/profile.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(HedieatyApp());
 }
 

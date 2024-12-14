@@ -22,7 +22,6 @@ class GiftDetailsPage extends StatelessWidget {
         backgroundColor: Colors.blueAccent,
       ),
       body: Container(
-        color: Colors.grey[200], // Adding a light background color
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +57,7 @@ class GiftDetailsPage extends StatelessWidget {
                   // Add action for pledge or other functionality
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: gift.isPledged ? Colors.grey : Colors.green,
+                  backgroundColor: gift.isPledged ? Colors.blueAccent : Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
                 child: Text(

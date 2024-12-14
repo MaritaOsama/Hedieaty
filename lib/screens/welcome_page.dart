@@ -14,7 +14,7 @@ class _WelcomePageState extends State<WelcomePage> {
     super.initState();
 
     // Navigate to home page after 3 seconds
-    Timer(Duration(seconds: 4), () {
+    Timer(Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),

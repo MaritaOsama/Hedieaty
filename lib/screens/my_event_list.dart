@@ -161,6 +161,16 @@ class _EventListPageState extends State<EventListPage> {
                           color: Colors.grey[700],
                         ),
                       ),
+                      trailing: Icon(Icons.arrow_forward_ios, size: 18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                GiftListPage(friendName: 'My Gift List'),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 );
@@ -187,10 +197,7 @@ class _EventListPageState extends State<EventListPage> {
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ProfilePage(),
-                ),
+                MaterialPageRoute(builder: (context) => ProfilePage()),
               );
               break;
           }
