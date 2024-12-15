@@ -44,13 +44,13 @@ flutter {
     source = "../.."
 }
 
-dependencies {
-    // Add Firebase BoM
-    implementation platform('com.google.firebase:firebase-bom:33.6.0')
-
-    // Add Firebase Analytics (or other Firebase products)
-    implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-firestore'
-}
-
-apply plugin: 'com.google.gms.google-services'
+//dependencies {
+//    // Add Firebase BoM
+//    implementation platform('com.google.firebase:firebase-bom:33.6.0')
+//
+//    // Add Firebase Analytics (or other Firebase products)
+//    implementation 'com.google.firebase:firebase-analytics'
+//    implementation 'com.google.firebase:firebase-firestore'
+//}
+//
+//apply plugin: 'com.google.gms.google-services'

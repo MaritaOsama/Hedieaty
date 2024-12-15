@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,23 +11,56 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> _login() async {
+  void _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        Navigator.pushReplacementNamed(context, '/home');
+        // Fetch user data from Firestore
+        var querySnapshot = await _firestore
+            .collection('users')
+            .where('email', isEqualTo: _emailController.text)
+            .get();
+
+        if (querySnapshot.docs.isEmpty) {
+          showErrorDialog("User not found");
+          return;
+        }
+
+        var userDoc = querySnapshot.docs.first;
+        var storedPassword = userDoc['password'];
+
+        if (storedPassword == _passwordController.text) {
+          // Navigate to the home screen if passwords match
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          showErrorDialog("Incorrect password");
+        }
       } catch (e) {
-        // Handle login error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        print("Error logging in: $e");
+        showErrorDialog("Error logging in. Please try again.");
       }
     }
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

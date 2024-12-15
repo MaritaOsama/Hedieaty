@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -9,39 +8,74 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> _signup() async {
+  void _signup() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Check if passwords match
+      if (_passwordController.text != _confirmPasswordController.text) {
+        // Show error message if passwords don't match
+        showErrorDialog("Passwords do not match.");
+        return;
+      }
+
       try {
-        // Create user with email and password
-        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+        // Prepare user data
+        Map<String, dynamic> userData = {
+          "name": _nameController.text,
+          "email": _emailController.text,
+          "password": _passwordController.text, // You should hash this password before saving
+          "createdAt": FieldValue.serverTimestamp(),
+        };
 
-        // Save additional user data to Firestore
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
+        // Add user data to Firestore
+        await _firestore.collection("users").add(userData);
 
-        await firestore.collection('users').doc(userCredential.user?.uid).set({
-          'email': userCredential.user?.email,
-          'name': 'User Name', // Replace with actual user input
-        });
+        print("User registered successfully");
 
-        // Navigate to home page
+        // Clear the fields
+        clearFields();
+
+        // Navigate to the home page after successful signup
         Navigator.pushReplacementNamed(context, '/home');
       } catch (e) {
-        // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        print("Error saving user: $e");
+        showErrorDialog("Error saving user. Please try again.");
       }
     }
+  }
+
+  void clearFields() {
+    _nameController.clear();
+    _emailController.clear();
+    _passwordController.clear();
+    _confirmPasswordController.clear();
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -93,6 +127,22 @@ class _SignupPageState extends State<SignupPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Email Field
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        prefixIcon: Icon(Icons.person),
+                        labelStyle: TextStyle(fontFamily: "Parkinsans"),
+                      ),
+                      keyboardType: TextInputType.name,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
                     TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(
