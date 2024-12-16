@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/login2.dart';
 import 'package:hedieaty/screens/login_page.dart';
 import 'dart:async';
 import 'home_page.dart';
@@ -17,7 +18,7 @@ class _WelcomePageState extends State<WelcomePage> {
     Timer(Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     });
   }

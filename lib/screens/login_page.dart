@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,56 +10,11 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  void _login() async {
+  void _login() {
     if (_formKey.currentState?.validate() ?? false) {
-      try {
-        // Fetch user data from Firestore
-        var querySnapshot = await _firestore
-            .collection('users')
-            .where('email', isEqualTo: _emailController.text)
-            .get();
-
-        if (querySnapshot.docs.isEmpty) {
-          showErrorDialog("User not found");
-          return;
-        }
-
-        var userDoc = querySnapshot.docs.first;
-        var storedPassword = userDoc['password'];
-
-        if (storedPassword == _passwordController.text) {
-          // Navigate to the home screen if passwords match
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          showErrorDialog("Incorrect password");
-        }
-      } catch (e) {
-        print("Error logging in: $e");
-        showErrorDialog("Error logging in. Please try again.");
-      }
+      // Logic to handle login can go here (e.g., API call or local validation)
+      Navigator.pushReplacementNamed(context, '/home'); // Navigates to HomePage
     }
-  }
-
-  void showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Error"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -92,8 +46,9 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-            SizedBox(height: 40),
-            // Form
+            SizedBox(height: 40), // Add space between the title and form
+
+            // Container for login form with decoration
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -128,6 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 16),
+
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
@@ -145,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 20),
+
                     // Login Button
                     ElevatedButton(
                       onPressed: _login,
@@ -159,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 10),
+
                     // Sign Up Button
                     TextButton(
                       onPressed: () {

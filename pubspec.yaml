@@ -37,9 +37,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   sqflite: ^2.3.0
   path: ^1.8.3
-  firebase_core: ^2.24.0
-  firebase_auth: ^4.6.1
-  cloud_firestore: ^4.13.3
+  # Firebase Core (required for all Firebase services)
+  firebase_core: ^3.8.0
+
+  # Firestore (for Cloud Firestore database)
+  cloud_firestore: ^5.5.0
+
+  # Firebase Authentication
+  firebase_auth: ^5.3.3
 
 
 dev_dependencies:

@@ -13,6 +13,8 @@ import 'screens/my_gift_list.dart';
 import 'screens/my_event_list.dart';
 import 'screens/pledged_gifts.dart';
 import 'screens/profile.dart';
+import 'screens/signup2.dart';
+import 'screens/login2.dart';
 
 
 void main() async {
@@ -33,8 +35,8 @@ class HedieatyApp extends StatelessWidget{
       initialRoute: '/',
       routes: {
         '/': (context) => WelcomePage(),
-        '/login': (context) => LoginPage(),
-        '/signup': (context) => SignupPage(),
+        '/login': (context) => LoginScreen(),
+        '/signup': (context) => SignUpScreen(),
         '/home': (context) => HomePage(),
         '/events': (context) => FEventListPage(friendName: ''),
         '/gifts': (context) => FGiftListPage(friendName: ''),

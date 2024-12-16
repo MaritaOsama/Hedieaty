@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -8,74 +8,37 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
 
-  // Firestore instance
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  void _signup() async {
+  // Sign up logic using Firebase Authentication
+  Future<void> _signup() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Check if passwords match
-      if (_passwordController.text != _confirmPasswordController.text) {
-        // Show error message if passwords don't match
-        showErrorDialog("Passwords do not match.");
-        return;
-      }
+      setState(() {
+        _isLoading = true;
+      });
 
       try {
-        // Prepare user data
-        Map<String, dynamic> userData = {
-          "name": _nameController.text,
-          "email": _emailController.text,
-          "password": _passwordController.text, // You should hash this password before saving
-          "createdAt": FieldValue.serverTimestamp(),
-        };
-
-        // Add user data to Firestore
-        await _firestore.collection("users").add(userData);
-
-        print("User registered successfully");
-
-        // Clear the fields
-        clearFields();
-
-        // Navigate to the home page after successful signup
+        // Firebase Authentication Sign Up
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        // Navigate to home page after successful signup
         Navigator.pushReplacementNamed(context, '/home');
-      } catch (e) {
-        print("Error saving user: $e");
-        showErrorDialog("Error saving user. Please try again.");
+      } on FirebaseAuthException catch (e) {
+        // Show error message if signup fails
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Sign-up failed")),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
-  }
-
-  void clearFields() {
-    _nameController.clear();
-    _emailController.clear();
-    _passwordController.clear();
-    _confirmPasswordController.clear();
-  }
-
-  void showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Error"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -107,7 +70,8 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ],
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 40), // Add space between the title and form
+
             // Container for signup form with decoration
             Container(
               padding: EdgeInsets.all(16),
@@ -128,22 +92,6 @@ class _SignupPageState extends State<SignupPage> {
                   children: [
                     // Email Field
                     TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Name',
-                        prefixIcon: Icon(Icons.person),
-                        labelStyle: TextStyle(fontFamily: "Parkinsans"),
-                      ),
-                      keyboardType: TextInputType.name,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Email',
@@ -159,6 +107,7 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 16),
+
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
@@ -176,6 +125,7 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 16),
+
                     // Confirm Password Field
                     TextFormField(
                       controller: _confirmPasswordController,
@@ -196,8 +146,11 @@ class _SignupPageState extends State<SignupPage> {
                       },
                     ),
                     SizedBox(height: 20),
+
                     // Sign Up Button
-                    ElevatedButton(
+                    _isLoading
+                        ? CircularProgressIndicator()
+                        : ElevatedButton(
                       onPressed: _signup,
                       child: Text(
                         'Sign Up',
@@ -210,6 +163,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     SizedBox(height: 10),
+
                     // Login Button (Redirect to Login Page)
                     TextButton(
                       onPressed: () {
