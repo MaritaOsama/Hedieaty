@@ -1,17 +1,130 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'my_gift_list.dart';
-import 'pledged_gifts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
 import 'my_event_list.dart';
+import 'my_gift_list.dart';
+import 'pledged_gifts.dart';
 
-class ProfilePage extends StatelessWidget {
-  final String userName = "John Doe";
-  final int numberOfFriends = 120;
-  final List<String> events = [
-    "Music Concert",
-    "Tech Meetup",
-    "Art Exhibition",
-  ];
+class ProfilePage extends StatefulWidget {
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+  String userName = "";
+  int numberOfFriends = 0;
+  List<String> events = [];
+  String profileImageUrl = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+    _fetchEvents();
+    _fetchFriendsCount();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    if (currentUserUid.isEmpty) return;
+    try {
+      DocumentSnapshot userSnapshot = await _firestore.collection('users').doc(currentUserUid).get();
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          userName = userData['name'] ?? 'Unknown User';
+          profileImageUrl = userData['imageUrl'] ?? ''; // Ensure this is fetched correctly
+        });
+      }
+    } catch (e) {
+      print("Error fetching user profile: $e");
+    }
+  }
+
+
+  Future<void> _fetchEvents() async {
+    if (currentUserUid.isEmpty) return;
+    try {
+      QuerySnapshot eventSnapshot = await _firestore
+          .collection('events')
+          .where('userId', isEqualTo: currentUserUid)
+          .get();
+
+      setState(() {
+        events = eventSnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final date = (data['date'] as Timestamp).toDate(); // Convert Timestamp
+          return "${data['name']} (${data['category']}) - ${date})";
+        }).toList();
+      });
+    } catch (e) {
+      print("Error fetching events: $e");
+    }
+  }
+
+
+  Future<void> _fetchFriendsCount() async {
+    if (currentUserUid.isEmpty) return;
+    try {
+      QuerySnapshot friendsSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUserUid)
+          .collection('friends')
+          .get();
+
+      setState(() {
+        numberOfFriends = friendsSnapshot.size;
+      });
+    } catch (e) {
+      print("Error fetching friends count: $e");
+    }
+  }
+
+  Future<void> _saveEvent(String eventName, String category, DateTime date) async {
+    if (currentUserUid.isEmpty || eventName.isEmpty || category.isEmpty) return;
+    try {
+      await _firestore.collection('events').add({
+        'userId': currentUserUid,
+        'name': eventName,
+        'category': category,
+        'date': Timestamp.fromDate(date),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      _fetchEvents();
+    } catch (e) {
+      print("Error saving event: $e");
+    }
+  }
+
+  Future<void> _saveProfile(String name, int age, String gender) async {
+    if (currentUserUid.isEmpty) return;
+    try {
+      // Assign profile image based on gender
+      String genderImage = "assets/default-profile.png";
+      if (gender.toLowerCase() == 'male') {
+        genderImage = "asset/images/Male_Icon.png";
+      } else if (gender.toLowerCase() == 'female') {
+        genderImage = "asset/images/Female_Icon (2).png";
+      }
+
+      await _firestore.collection('users').doc(currentUserUid).update({
+        'name': name,
+        'age': age,
+        'gender': gender,
+        'profileImageUrl': genderImage,
+      });
+
+      setState(() {
+        profileImageUrl = genderImage; // Update local profile image
+      });
+
+      _fetchUserProfile();
+    } catch (e) {
+      print("Error saving profile: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +134,33 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Image
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: NetworkImage("https://www.example.com/profile-image.jpg"), // Replace with the actual image URL or asset
-            ),
-            SizedBox(height: 20),
-
-            // User Name
+          StreamBuilder<DocumentSnapshot>(
+            stream: _firestore.collection('users').doc(currentUserUid).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+              if (!snapshot.hasData || snapshot.data!.data() == null) {
+                return Text('No user data found');
+              }
+              final userData = snapshot.data!.data() as Map<String, dynamic>;
+              String imageUrl = userData['imageUrl'] ?? '';
+              return CircleAvatar(
+                radius: 60,
+                backgroundImage: imageUrl.isNotEmpty
+                  ? (imageUrl.startsWith('http')
+                    ? NetworkImage(imageUrl)
+                    : AssetImage(imageUrl)) as ImageProvider
+                  : AssetImage("assets/default-profile.png"),
+              );
+              },
+        ),
+          SizedBox(height: 20),
             Text(
-              userName,
+              userName.isNotEmpty ? userName : "Loading...",
               style: TextStyle(
                 fontFamily: "Parkinsans",
                 fontSize: 30,
@@ -38,8 +168,6 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 10),
-
-            // Number of Friends
             Text(
               '$numberOfFriends Friends',
               style: TextStyle(
@@ -49,47 +177,23 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-
-            // Row of buttons (New Event, Edit Profile)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    _showNewEventDialog(context);
-                  },
+                  onPressed: () => _showNewEventDialog(context),
                   icon: Icon(Icons.event, color: Colors.deepPurple),
-                  label: Text(
-                    'New Event',
-                    style: TextStyle(
-                      fontFamily: "Parkinsans",
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
+                  label: Text('New Event'),
                 ),
                 SizedBox(width: 20),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    _showEditProfileDialog(context);
-                  },
+                  onPressed: () => _showEditProfileDialog(context),
                   icon: Icon(Icons.edit, color: Colors.deepPurple),
-                  label: Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      fontFamily: "Parkinsans",
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
+                  label: Text('Edit Profile'),
                 ),
               ],
             ),
             SizedBox(height: 20),
-
-            // List of User's Events
             Expanded(
               child: ListView.builder(
                 itemCount: events.length,
@@ -122,7 +226,6 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
-      // Button to navigate to the Pledged Gifts page
       bottomSheet: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -153,7 +256,6 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
-      // Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
@@ -198,11 +300,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // New Event Dialog
   void _showNewEventDialog(BuildContext context) {
     TextEditingController eventNameController = TextEditingController();
     TextEditingController categoryController = TextEditingController();
-    TextEditingController dateController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
 
     showDialog(
       context: context,
@@ -220,25 +321,37 @@ class ProfilePage extends StatelessWidget {
                 controller: categoryController,
                 decoration: InputDecoration(labelText: 'Category'),
               ),
-              TextField(
-                controller: dateController,
-                decoration: InputDecoration(labelText: 'Event Date'),
-                keyboardType: TextInputType.datetime,
+              ListTile(
+                title: Text("Date: ${selectedDate.toLocal()}".split(' ')[0]),
+                trailing: Icon(Icons.calendar_today),
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now().subtract(Duration(days: 365)),
+                    lastDate: DateTime.now().add(Duration(days: 365 * 10)),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      selectedDate = pickedDate;
+                    });
+                  }
+                },
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
-                // Save the event
-                print('Event Saved: ${eventNameController.text}');
-                Navigator.pop(context);
+                if (eventNameController.text.isNotEmpty &&
+                    categoryController.text.isNotEmpty) {
+                  _saveEvent(eventNameController.text, categoryController.text, selectedDate);
+                  Navigator.pop(context);
+                }
               },
               child: Text('Save'),
             ),
@@ -248,12 +361,12 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // Edit Profile Dialog
+
   void _showEditProfileDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController ageController = TextEditingController();
     TextEditingController genderController = TextEditingController();
-    TextEditingController emailController = TextEditingController();
+
 
     showDialog(
       context: context,
@@ -263,37 +376,23 @@ class ProfilePage extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: ageController,
-                decoration: InputDecoration(labelText: 'Age'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: genderController,
-                decoration: InputDecoration(labelText: 'Gender'),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-              ),
+              TextField(controller: nameController, decoration: InputDecoration(labelText: 'Name')),
+              TextField(controller: ageController, decoration: InputDecoration(labelText: 'Age')),
+              TextField(controller: genderController, decoration: InputDecoration(labelText: 'Gender')),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
-                // Save the profile changes
-                print('Profile Saved: ${nameController.text}');
+                _saveProfile(
+                  nameController.text,
+                  int.tryParse(ageController.text) ?? 0,
+                  genderController.text,
+                );
                 Navigator.pop(context);
               },
               child: Text('Save'),
