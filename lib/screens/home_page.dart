@@ -295,29 +295,46 @@
 //   }
 // }
 
+
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/screens/friend_event_list_page.dart';
-import 'package:hedieaty/screens/profile.dart';
 import 'friend_gift_list.dart';
 import 'my_event_list.dart';
 import 'my_gift_list.dart';
+import 'friend_event_list_page.dart';
+import 'package:hedieaty/screens/profile.dart';
 
 class Friend {
+  final String id;
   final String name;
   final String avatar;
   final int upcomingEvents;
 
-  Friend({required this.name, required this.avatar, required this.upcomingEvents});
+  Friend({
+    required this.id,
+    required this.name,
+    required this.avatar,
+    required this.upcomingEvents,
+  });
 
-  // Convert Firestore data into a Friend object
   factory Friend.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    final data = doc.data() as Map<String, dynamic>;
     return Friend(
+      id: doc.id,
       name: data['name'] ?? '',
-      avatar: data['avatar'] ?? 'asset/Female_Icon (2).png', // Default avatar
+      avatar: data['avatar'] ?? '',
       upcomingEvents: data['upcomingEvents'] ?? 0,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'avatar': avatar,
+      'upcomingEvents': upcomingEvents,
+    };
   }
 }
 
@@ -328,8 +345,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String currentUserUid = "currentUserUid"; // Replace with actual current user UID
-
+  final String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
   late Stream<List<Friend>> _friendsStream;
 
   @override
@@ -338,22 +354,27 @@ class _HomePageState extends State<HomePage> {
     _friendsStream = _getFriendsStream();
   }
 
+  // Fetch the friends data for the current user
   Stream<List<Friend>> _getFriendsStream() {
-    // Stream that fetches all users except the current user
-    return _firestore.collection('users')
-        .where('uid', isNotEqualTo: currentUserUid)
+    return FirebaseFirestore.instance
+        .collection('users') // Ensure this matches the collection you're using
+        .doc(currentUserUid) // Get the current user
+        .collection('friends') // Subcollection of friends for the current user
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => Friend.fromFirestore(doc))
-        .toList());
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => Friend.fromFirestore(doc)).toList());
   }
 
+  // Add a friend to the current user's friend list in Firestore
   void _addFriend(String name, String uid) {
-    // Add friend logic
     _firestore.collection('users')
         .doc(currentUserUid)
-        .update({
-      'friends': FieldValue.arrayUnion([uid]), // Add the friend's UID to the user's friend list
+        .collection('friends') // Store the friend in the 'friends' subcollection
+        .doc(uid) // Use the friend's UID to store their info
+        .set({
+      'name': name,
+      'avatar': 'default_avatar_url', // You can customize this based on the friend's data
+      'upcomingEvents': 0, // Default value
     }).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$name added as a friend!')),
@@ -409,7 +430,7 @@ class _HomePageState extends State<HomePage> {
             }
 
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No users found'));
+              return Center(child: Text('No friends added yet.'));
             }
 
             final friends = snapshot.data!;
@@ -441,7 +462,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     leading: CircleAvatar(
-                      backgroundImage: AssetImage(friend.avatar),
+                      backgroundImage: friend.avatar.startsWith('http')
+                          ? NetworkImage(friend.avatar)
+                          : AssetImage(friend.avatar) as ImageProvider,
                     ),
                     trailing: Icon(
                       Icons.arrow_forward_ios,
@@ -451,7 +474,8 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FEventListPage(friendName: friend.name),
+                          builder: (context) =>
+                              FEventListPage(friendName: friend.name),
                         ),
                       );
                     },
@@ -564,3 +588,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
