@@ -1,16 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'my_event_list.dart';
-
 class Gift {
+  String id;
   String name;
   String category;
   bool isPledged;
 
-  Gift({required this.name, required this.category, this.isPledged = false});
+  Gift({required this.id, required this.name, required this.category, this.isPledged = false});
 
-  // Convert Gift to a Map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -19,9 +17,9 @@ class Gift {
     };
   }
 
-  // Convert a Firestore document to a Gift object
-  factory Gift.fromMap(Map<String, dynamic> map) {
+  factory Gift.fromMap(String id, Map<String, dynamic> map) {
     return Gift(
+      id: id,
       name: map['name'] ?? '',
       category: map['category'] ?? '',
       isPledged: map['isPledged'] ?? false,
@@ -47,23 +45,25 @@ class _GiftListPageState extends State<GiftListPage> {
   @override
   void initState() {
     super.initState();
-    // Access the Firestore collection for gifts inside a specific event
     giftsCollection = FirebaseFirestore.instance
-        .collection('events')        // 'events' collection
-        .doc(widget.eventId)           // The event document (ID passed to the page)
-        .collection('gifts');        // 'gifts' subcollection
-
-    // Load the gifts for the event
+        .collection('events')
+        .doc(widget.eventId)
+        .collection('gifts');
     _loadGifts();
   }
 
+  // Load gifts from Firestore
   void _loadGifts() async {
-    QuerySnapshot querySnapshot = await giftsCollection.get();
-    setState(() {
-      gifts = querySnapshot.docs
-          .map((doc) => Gift.fromMap(doc.data() as Map<String, dynamic>))
-          .toList();
-    });
+    try {
+      QuerySnapshot querySnapshot = await giftsCollection.get();
+      setState(() {
+        gifts = querySnapshot.docs
+            .map((doc) => Gift.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+            .toList();
+      });
+    } catch (e) {
+      print("Error loading gifts: $e");
+    }
   }
 
   void _addGift() {
@@ -95,16 +95,14 @@ class _GiftListPageState extends State<GiftListPage> {
             TextButton(
               onPressed: () async {
                 if (newName.isNotEmpty && newCategory.isNotEmpty) {
-                  // Create a new gift object
-                  Gift newGift = Gift(name: newName, category: newCategory);
-
-                  // Add the gift to the Firestore subcollection
-                  await giftsCollection.add(newGift.toMap());
-
-                  // Reload the list of gifts
-                  _loadGifts();
-
-                  Navigator.pop(context);
+                  Gift newGift = Gift(id: '', name: newName, category: newCategory);
+                  try {
+                    await giftsCollection.add(newGift.toMap());
+                    _loadGifts();
+                    Navigator.pop(context);
+                  } catch (e) {
+                    print("Error adding gift: $e");
+                  }
                 }
               },
               child: Text("Add Gift"),
@@ -122,23 +120,97 @@ class _GiftListPageState extends State<GiftListPage> {
   }
 
   void _deleteGift(String giftId) async {
-    await giftsCollection.doc(giftId).delete();
-    _loadGifts(); // Reload gifts after deletion
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this gift?"),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                try {
+                  await giftsCollection.doc(giftId).delete();
+                  _loadGifts(); // Reload gifts after deletion
+                  Navigator.pop(context);
+                } catch (e) {
+                  print("Error deleting gift: $e");
+                }
+              },
+              child: Text("Delete"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the confirmation dialog
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _editGift(String giftId, String newName, String newCategory) async {
-    await giftsCollection.doc(giftId).update({
-      'name': newName,
-      'category': newCategory,
-    });
-    _loadGifts(); // Reload gifts after editing
+  void _editGift(String giftId, String currentName, String currentCategory) async {
+    TextEditingController nameController = TextEditingController(text: currentName);
+    TextEditingController categoryController = TextEditingController(text: currentCategory);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Gift"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: "Gift Name"),
+              ),
+              TextField(
+                controller: categoryController,
+                decoration: InputDecoration(labelText: "Gift Category"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                String newName = nameController.text;
+                String newCategory = categoryController.text;
+
+                if (newName.isNotEmpty && newCategory.isNotEmpty) {
+                  try {
+                    await giftsCollection.doc(giftId).update({
+                      'name': newName,
+                      'category': newCategory,
+                    });
+                    _loadGifts();
+                    Navigator.pop(context);
+                  } catch (e) {
+                    print("Error editing gift: $e");
+                  }
+                }
+              },
+              child: Text("Save Changes"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog without saving
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.eventName}'s Gift List"),
+        title: Text("${widget.eventName} Gift List"),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -179,11 +251,11 @@ class _GiftListPageState extends State<GiftListPage> {
                   gift: gift,
                   onEdit: () {
                     if (!gift.isPledged) {
-                      _editGift(gift.name, "Edited Gift", "Edited Category");
+                      _editGift(gift.id, gift.name, gift.category); // Use gift.id for editing
                     }
                   },
                   onDelete: () {
-                    _deleteGift(gift.name); // Pass gift ID here
+                    _deleteGift(gift.id); // Use gift.id for deleting
                   },
                 );
               },
