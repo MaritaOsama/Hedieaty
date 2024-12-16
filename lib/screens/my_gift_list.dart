@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'my_gift_details.dart';
 
 class Gift {
   String id;
@@ -257,6 +258,18 @@ class _GiftListPageState extends State<GiftListPage> {
                   onDelete: () {
                     _deleteGift(gift.id); // Use gift.id for deleting
                   },
+                  onViewDetails: () {
+                    // Navigate to GiftDetailsPage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GiftDetailsPage(
+                          giftId: gift.id, // Pass gift ID
+                          eventId: widget.eventId, // Pass event ID
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -306,36 +319,46 @@ class GiftCard extends StatelessWidget {
   final Gift gift;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onViewDetails; // New callback for viewing details
 
-  GiftCard({required this.gift, required this.onEdit, required this.onDelete});
+  GiftCard({
+    required this.gift,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onViewDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        title: Text(
-          gift.name,
-          style: TextStyle(
-            color: gift.isPledged ? Colors.grey : Colors.black,
-            fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: onViewDetails, // Navigate to the details page when tapped
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: ListTile(
+          title: Text(
+            gift.name,
+            style: TextStyle(
+              color: gift.isPledged ? Colors.grey : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        subtitle: Text(gift.category),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: onEdit,
-              icon: Icon(Icons.edit, color: Colors.orange),
-            ),
-            IconButton(
-              onPressed: onDelete,
-              icon: Icon(Icons.delete, color: Colors.red),
-            ),
-          ],
+          subtitle: Text(gift.category),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: onEdit,
+                icon: Icon(Icons.edit, color: Colors.orange),
+              ),
+              IconButton(
+                onPressed: onDelete,
+                icon: Icon(Icons.delete, color: Colors.red),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
