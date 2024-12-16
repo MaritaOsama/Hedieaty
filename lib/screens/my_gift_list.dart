@@ -1,7 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/screens/profile.dart';
-import 'my_gift_details.dart';
-import 'home_page.dart';
+
 import 'my_event_list.dart';
 
 class Gift {
@@ -10,39 +9,60 @@ class Gift {
   bool isPledged;
 
   Gift({required this.name, required this.category, this.isPledged = false});
+
+  // Convert Gift to a Map for Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'category': category,
+      'isPledged': isPledged,
+    };
+  }
+
+  // Convert a Firestore document to a Gift object
+  factory Gift.fromMap(Map<String, dynamic> map) {
+    return Gift(
+      name: map['name'] ?? '',
+      category: map['category'] ?? '',
+      isPledged: map['isPledged'] ?? false,
+    );
+  }
 }
 
 class GiftListPage extends StatefulWidget {
-  // final String friendName;
-  //
-  // GiftListPage({required this.friendName});
+  final String eventId;
+  final String eventName;
 
-  final String event;
-  GiftListPage({required this.event});
+  GiftListPage({required this.eventId, required this.eventName});
 
   @override
   _GiftListPageState createState() => _GiftListPageState();
 }
 
 class _GiftListPageState extends State<GiftListPage> {
-  List<Gift> gifts = [
-    Gift(name: "Laptop", category: "Electronics"),
-    Gift(name: "Book", category: "Books", isPledged: true),
-    Gift(name: "Watch", category: "Accessories"),
-  ];
-
+  late CollectionReference giftsCollection;
+  List<Gift> gifts = [];
   String sortBy = "name";
 
-  void _sortGifts(String criteria) {
+  @override
+  void initState() {
+    super.initState();
+    // Access the Firestore collection for gifts inside a specific event
+    giftsCollection = FirebaseFirestore.instance
+        .collection('events')        // 'events' collection
+        .doc(widget.eventId)           // The event document (ID passed to the page)
+        .collection('gifts');        // 'gifts' subcollection
+
+    // Load the gifts for the event
+    _loadGifts();
+  }
+
+  void _loadGifts() async {
+    QuerySnapshot querySnapshot = await giftsCollection.get();
     setState(() {
-      sortBy = criteria;
-      if (criteria == 'name') {
-        gifts.sort((a, b) => a.name.compareTo(b.name));
-      } else if (criteria == 'category') {
-        gifts.sort((a, b) => a.category.compareTo(b.category));
-      } else if (criteria == 'status') {
-        gifts.sort((a, b) => a.isPledged.toString().compareTo(b.isPledged.toString()));
-      }
+      gifts = querySnapshot.docs
+          .map((doc) => Gift.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
     });
   }
 
@@ -73,11 +93,17 @@ class _GiftListPageState extends State<GiftListPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (newName.isNotEmpty && newCategory.isNotEmpty) {
-                  setState(() {
-                    gifts.add(Gift(name: newName, category: newCategory));
-                  });
+                  // Create a new gift object
+                  Gift newGift = Gift(name: newName, category: newCategory);
+
+                  // Add the gift to the Firestore subcollection
+                  await giftsCollection.add(newGift.toMap());
+
+                  // Reload the list of gifts
+                  _loadGifts();
+
                   Navigator.pop(context);
                 }
               },
@@ -95,24 +121,24 @@ class _GiftListPageState extends State<GiftListPage> {
     );
   }
 
-  void _deleteGift(int index) {
-    setState(() {
-      gifts.removeAt(index);
-    });
+  void _deleteGift(String giftId) async {
+    await giftsCollection.doc(giftId).delete();
+    _loadGifts(); // Reload gifts after deletion
   }
 
-  void _editGift(int index, String newName, String newCategory) {
-    setState(() {
-      gifts[index].name = newName;
-      gifts[index].category = newCategory;
+  void _editGift(String giftId, String newName, String newCategory) async {
+    await giftsCollection.doc(giftId).update({
+      'name': newName,
+      'category': newCategory,
     });
+    _loadGifts(); // Reload gifts after editing
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.event}'s Gift List", style: TextStyle(fontFamily: "Parkinsans")),
+        title: Text("${widget.eventName}'s Gift List"),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -139,7 +165,7 @@ class _GiftListPageState extends State<GiftListPage> {
                 ElevatedButton(
                   onPressed: _addGift,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-                  child: Text("Add Gift", style: TextStyle(fontFamily: "Parkinsans")),
+                  child: Text("Add Gift"),
                 ),
               ],
             ),
@@ -153,17 +179,11 @@ class _GiftListPageState extends State<GiftListPage> {
                   gift: gift,
                   onEdit: () {
                     if (!gift.isPledged) {
-                      _editGift(index, "Edited Gift", "Edited Category");
+                      _editGift(gift.name, "Edited Gift", "Edited Category");
                     }
                   },
                   onDelete: () {
-                    _deleteGift(index);
-                  },
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => GiftDetailsPage(gift: gift)),
-                    );
+                    _deleteGift(gift.name); // Pass gift ID here
                   },
                 );
               },
@@ -174,28 +194,9 @@ class _GiftListPageState extends State<GiftListPage> {
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
-        currentIndex: 0, // Set the active tab index
+        currentIndex: 0,
         onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => EventListPage()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-              break;
-          }
+          // Handle navigation
         },
         items: [
           BottomNavigationBarItem(
@@ -214,15 +215,27 @@ class _GiftListPageState extends State<GiftListPage> {
       ),
     );
   }
+
+  void _sortGifts(String criteria) {
+    setState(() {
+      sortBy = criteria;
+      if (criteria == 'name') {
+        gifts.sort((a, b) => a.name.compareTo(b.name));
+      } else if (criteria == 'category') {
+        gifts.sort((a, b) => a.category.compareTo(b.category));
+      } else if (criteria == 'status') {
+        gifts.sort((a, b) => a.isPledged.toString().compareTo(b.isPledged.toString()));
+      }
+    });
+  }
 }
 
 class GiftCard extends StatelessWidget {
   final Gift gift;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onTap;
 
-  GiftCard({required this.gift, required this.onEdit, required this.onDelete, required this.onTap});
+  GiftCard({required this.gift, required this.onEdit, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -233,11 +246,10 @@ class GiftCard extends StatelessWidget {
           gift.name,
           style: TextStyle(
             color: gift.isPledged ? Colors.grey : Colors.black,
-            fontFamily: "Parkinsans",
             fontWeight: FontWeight.bold,
           ),
         ),
-        subtitle: Text(gift.category, style: TextStyle(fontFamily: "Parkinsans")),
+        subtitle: Text(gift.category),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -251,7 +263,6 @@ class GiftCard extends StatelessWidget {
             ),
           ],
         ),
-        onTap: onTap,
       ),
     );
   }

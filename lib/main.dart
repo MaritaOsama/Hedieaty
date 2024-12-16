@@ -43,7 +43,7 @@ class HedieatyApp extends StatelessWidget{
         '/giftsDetails': (context) => FGiftDetailsPage(gift: gift),
         '/profile': (context) => ProfilePage(),
         '/pledgedGifts': (context) => MyPledgedGiftsPage(),
-        '/myGifts': (context) => GiftListPage(event: ''),
+        '/myGifts': (context) => GiftListPage(eventId: '',eventName: ''),
         '/myEvents': (context) => EventListPage(),
         '/myGiftDetails': (context) => GiftDetailsPage(gift: gift),
       },

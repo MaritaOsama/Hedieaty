@@ -10,13 +10,15 @@ User? currentUser = _auth.currentUser;
 String? userId = currentUser?.uid;
 
 class Event {
+  String id;
   String name;
   String category;
   DateTime date;
   String status;
-  String userId; // New field to store the user's UID
+  String userId;
 
   Event({
+    required this.id,
     required this.name,
     required this.category,
     required this.date,
@@ -56,14 +58,14 @@ class _EventListPageState extends State<EventListPage> {
   void _loadEvents() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Query events for the current user
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('events')
-          .where('userId', isEqualTo: user.uid) // Filter events by current user's UID
+          .where('userId', isEqualTo: user.uid)
           .get();
 
       List<Event> fetchedEvents = snapshot.docs.map((doc) {
         return Event(
+          id: doc.id,  // Save the Firestore document ID
           name: doc['name'],
           category: doc['category'],
           date: (doc['date'] as Timestamp).toDate(),
@@ -75,10 +77,10 @@ class _EventListPageState extends State<EventListPage> {
         events = fetchedEvents;
       });
     } else {
-      // Handle the case where the user is not logged in
       print('No user is logged in!');
     }
   }
+
 
 
 
@@ -167,7 +169,7 @@ class _EventListPageState extends State<EventListPage> {
         name: name,
         category: category,
         date: date,
-        userId: user.uid, // Dynamically fetch the user UID
+        userId: user.uid, id: '', // Dynamically fetch the user UID
       );
 
       // Save the event to Firestore under the user's UID
@@ -270,14 +272,30 @@ class _EventListPageState extends State<EventListPage> {
                       ),
                       subtitle: Text("${event.category} - ${event.status}"),
                       trailing: Icon(Icons.arrow_forward_ios, size: 18),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GiftListPage(event: event.name), // Passing the event data
-                          ),
-                        );
-                      },
+                        onTap: () async {
+                          // Fetch the event details using the event ID
+                          DocumentSnapshot doc = await FirebaseFirestore.instance
+                              .collection('events')
+                              .doc(event.id)  // Use the event ID to get the document
+                              .get();
+
+                          // Create an Event object with the data fetched from Firestore
+                          Event eventDetails = Event(
+                            id: doc.id,
+                            name: doc['name'],
+                            category: doc['category'],
+                            date: (doc['date'] as Timestamp).toDate(),
+                            userId: doc['userId'],
+                          );
+
+                          // Navigate to the GiftListPage with the event details
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GiftListPage(eventId: event.id, eventName: event.name),
+                            ),
+                          );
+                        },
                     ),
                   ),
                 );
