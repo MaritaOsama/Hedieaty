@@ -13,9 +13,12 @@ class Gift {
 }
 
 class GiftListPage extends StatefulWidget {
-  final String friendName;
+  // final String friendName;
+  //
+  // GiftListPage({required this.friendName});
 
-  GiftListPage({required this.friendName});
+  final String event;
+  GiftListPage({required this.event});
 
   @override
   _GiftListPageState createState() => _GiftListPageState();
@@ -109,7 +112,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.friendName}'s Gift List", style: TextStyle(fontFamily: "Parkinsans")),
+        title: Text("${widget.event}'s Gift List", style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(

@@ -11,8 +11,8 @@ class FGift {
 
 class FGiftListPage extends StatefulWidget {
   final String friendName;
-
   FGiftListPage({required this.friendName});
+
 
   @override
   _FGiftListPageState createState() => _FGiftListPageState();

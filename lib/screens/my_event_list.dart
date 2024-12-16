@@ -271,7 +271,12 @@ class _EventListPageState extends State<EventListPage> {
                       subtitle: Text("${event.category} - ${event.status}"),
                       trailing: Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
-                        // Navigate to another page if needed
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GiftListPage(event: event.name), // Passing the event data
+                          ),
+                        );
                       },
                     ),
                   ),
