@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/my_gift_list.dart';
 import 'home_page.dart';
 import 'profile.dart';
 import 'my_event_list.dart';
 import 'friend_gift_list.dart';
+import 'my_gift_list.dart';
 
 class Event {
   String id;
@@ -229,8 +231,7 @@ class _FEventListPageState extends State<FEventListPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => FGiftListPage(
-                                friendName: widget.friendName),
+                            builder: (context) => GiftListPage(eventId: event.id, eventName: event.name),
                           ),
                         );
                       },
