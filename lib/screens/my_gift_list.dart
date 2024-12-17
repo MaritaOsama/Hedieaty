@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'home_page.dart';
+import 'my_event_list.dart';
 import 'my_gift_details.dart';
+import 'profile.dart';
 
 class Gift {
   String id;
@@ -277,11 +280,27 @@ class _GiftListPageState extends State<GiftListPage> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
         onTap: (index) {
-          // Handle navigation
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => EventListPage()),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
+              break;
+          }
         },
         items: [
           BottomNavigationBarItem(

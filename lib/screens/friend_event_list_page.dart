@@ -231,7 +231,7 @@ class _FEventListPageState extends State<FEventListPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => GiftListPage(eventId: event.id, eventName: event.name),
+                            builder: (context) => FGiftListPage(eventId: event.id, eventName: event.name),
                           ),
                         );
                       },
