@@ -38,7 +38,7 @@ class HedieatyApp extends StatelessWidget{
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/home': (context) => HomePage(),
-        '/events': (context) => FEventListPage(friendName: ''),
+        '/events': (context) => FEventListPage(friendId: '', friendName: ''),
         '/gifts': (context) => FGiftListPage(friendName: ''),
         '/giftsDetails': (context) => FGiftDetailsPage(gift: gift),
         '/profile': (context) => ProfilePage(),

@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'friend_gift_list.dart';
-import 'my_event_list.dart';
-import 'my_gift_list.dart';
 import 'friend_event_list_page.dart';
-import 'package:hedieaty/screens/profile.dart';
+import 'my_event_list.dart';
+import 'profile.dart';
 
 class Friend {
   final String id;
@@ -26,16 +24,8 @@ class Friend {
       id: doc.id,
       name: data['name'] ?? '',
       avatar: data['avatar'] ?? '',
-      upcomingEvents: data['upcomingEvents'] ?? 0,
+      upcomingEvents: 0, // Default value, will update later
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'avatar': avatar,
-      'upcomingEvents': upcomingEvents,
-    };
   }
 }
 
@@ -52,18 +42,40 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _friendsStream = _getFriendsStream();
+    _friendsStream = _getFriendsStreamWithEventCounts();
   }
 
-  // Fetch the friends data for the current user
-  Stream<List<Friend>> _getFriendsStream() {
+  // Fetch friends and their event counts
+  Stream<List<Friend>> _getFriendsStreamWithEventCounts() {
     return FirebaseFirestore.instance
-        .collection('users') // Ensure this matches the collection you're using
-        .doc(currentUserUid) // Get the current user
-        .collection('friends') // Subcollection of friends for the current user
+        .collection('users')
+        .doc(currentUserUid)
+        .collection('friends')
         .snapshots()
-        .map((snapshot) =>
-        snapshot.docs.map((doc) => Friend.fromFirestore(doc)).toList());
+        .asyncMap((snapshot) async {
+      // Fetch friends as a list of Friend objects
+      final friends = await Future.wait(snapshot.docs.map((doc) async {
+        final friend = Friend.fromFirestore(doc);
+        final eventCount = await _getEventCountForFriend(friend.id);
+        return Friend(
+          id: friend.id,
+          name: friend.name,
+          avatar: friend.avatar,
+          upcomingEvents: eventCount,
+        );
+      }).toList());
+
+      return friends;
+    });
+  }
+
+  // Fetch the event count for a specific friend
+  Future<int> _getEventCountForFriend(String friendId) async {
+    final query = await _firestore
+        .collection('events')
+        .where('userId', isEqualTo: friendId)
+        .get();
+    return query.docs.length;
   }
 
   // Add a friend to the current user's friend list in Firestore
@@ -176,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              FEventListPage(friendName: friend.name),
+                              FEventListPage(friendName: friend.name, friendId: friend.id),
                         ),
                       );
                     },

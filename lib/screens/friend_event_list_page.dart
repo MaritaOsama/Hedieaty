@@ -1,18 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/screens/friend_gift_list.dart';
-import 'package:hedieaty/screens/profile.dart';
 import 'home_page.dart';
-import 'my_gift_list.dart';
+import 'profile.dart';
 import 'my_event_list.dart';
+import 'friend_gift_list.dart';
 
 class Event {
+  String id;
   String name;
   String category;
   DateTime date;
-  String status; //"Upcoming", "Current", "Past"
+  String status;
 
-  Event({required this.name, required this.category, required this.date})
-      : status = _determineStatus(date);
+  Event({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.date,
+  }) : status = _determineStatus(date);
 
   static String _determineStatus(DateTime date) {
     final now = DateTime.now();
@@ -24,31 +29,63 @@ class Event {
       return "Current";
     }
   }
+
+  factory Event.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Event(
+      id: doc.id,
+      name: data['name'] ?? 'Unnamed Event',
+      category: data['category'] ?? 'Uncategorized',
+      date: (data['date'] as Timestamp).toDate(),
+    );
+  }
 }
 
-
 class FEventListPage extends StatefulWidget {
+  final String friendId;
   final String friendName;
-  FEventListPage({required this.friendName});
+
+  FEventListPage({required this.friendId, required this.friendName});
 
   @override
   _FEventListPageState createState() => _FEventListPageState();
 }
 
 class _FEventListPageState extends State<FEventListPage> {
-  List<Event> events = [
-    Event(name: "Grad",
-        category: "Celebration",
-        date: DateTime.now().add(Duration(days: 7))),
-    Event(name: "Meeting",
-        category: "Work",
-        date: DateTime.now().add(Duration(days: -2))),
-    Event(name: "Lecture", category: "Education", date: DateTime.now()),
-  ];
-
+  List<Event> events = [];
   String sortBy = "name"; // Default sorting criteria
+  bool isLoading = true;
 
-  // Function to sort the event list
+  @override
+  void initState() {
+    super.initState();
+    _fetchEvents();
+  }
+
+  Future<void> _fetchEvents() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .where('userId', isEqualTo: widget.friendId)
+          .get();
+
+      final fetchedEvents = querySnapshot.docs
+          .map((doc) => Event.fromFirestore(doc))
+          .toList();
+
+      setState(() {
+        events = fetchedEvents;
+        _sortEvents(sortBy);
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching events: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   void _sortEvents(String criteria) {
     setState(() {
       sortBy = criteria;
@@ -61,34 +98,6 @@ class _FEventListPageState extends State<FEventListPage> {
       }
     });
   }
-
-  // Function to add a new event
-  void _addEvent() {
-    setState(() {
-      events.add(
-          Event(name: "New Event", category: "General", date: DateTime.now()));
-    });
-  }
-
-  // Function to delete an event
-  void _deleteEvent(int index) {
-    setState(() {
-      events.removeAt(index);
-    });
-  }
-
-  // Function to edit an event
-  void _editEvent(int index, String newName, String newCategory,
-      DateTime newDate) {
-    setState(() {
-      events[index].name = newName;
-      events[index].category = newCategory;
-      events[index].date = newDate;
-      events[index].status =
-          Event._determineStatus(newDate); // Update status based on new date
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -104,14 +113,17 @@ class _FEventListPageState extends State<FEventListPage> {
         ),
         backgroundColor: Colors.blueAccent,
       ),
-      body: Column(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           // Header Section
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.blueAccent,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              borderRadius:
+              BorderRadius.vertical(bottom: Radius.circular(20)),
             ),
             child: Center(
               child: Text(
@@ -163,12 +175,23 @@ class _FEventListPageState extends State<FEventListPage> {
 
           // Event List
           Expanded(
-            child: ListView.builder(
+            child: events.isEmpty
+                ? Center(
+              child: Text(
+                "No events found",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+                : ListView.builder(
               itemCount: events.length,
               itemBuilder: (context, index) {
                 final event = events[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
                   child: Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -200,13 +223,14 @@ class _FEventListPageState extends State<FEventListPage> {
                           color: Colors.grey[700],
                         ),
                       ),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 18),
+                      trailing:
+                      Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                FGiftListPage(friendName: widget.friendName),
+                            builder: (context) => FGiftListPage(
+                                friendName: widget.friendName),
                           ),
                         );
                       },
