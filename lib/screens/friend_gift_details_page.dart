@@ -1,72 +1,56 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'my_event_list.dart';
-import 'profile.dart';
-import 'home_page.dart';
+
 
 class FGiftDetailsPage extends StatefulWidget {
-  final String giftId;
   final String eventId;
+  final String giftId;
 
-  FGiftDetailsPage({required this.giftId, required this.eventId});
+  const FGiftDetailsPage({required this.eventId, required this.giftId, Key? key}) : super(key: key);
 
   @override
   _FGiftDetailsPageState createState() => _FGiftDetailsPageState();
 }
 
 class _FGiftDetailsPageState extends State<FGiftDetailsPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  // Text editing controllers
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-
   bool _isPledged = false;
-  File? _selectedImage;
+  Map<String, dynamic>? _giftData;
 
-  Future<Map<String, dynamic>?> fetchGiftDetails() async {
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.eventId)
-          .collection('gifts')
-          .doc(widget.giftId)
-          .get();
-      return doc.exists ? doc.data() : null;
-    } catch (e) {
-      print("Error fetching gift details: $e");
-      return null;
+  @override
+  void initState() {
+    super.initState();
+    _loadGiftDetails();
+  }
+
+  Future<void> _loadGiftDetails() async {
+    final giftDoc = await FirebaseFirestore.instance
+        .collection('events')
+        .doc(widget.eventId)
+        .collection('gifts')
+        .doc(widget.giftId)
+        .get();
+
+    final data = giftDoc.data();
+    if (data != null) {
+      setState(() {
+        _giftData = data;
+        _isPledged = data['isPledged'] ?? false;
+      });
     }
   }
 
-  Future<void> updateGiftDetails() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    try {
+  Future<void> _pledgeGift() async {
+    if (!_isPledged) {
+      setState(() => _isPledged = true);
       await FirebaseFirestore.instance
           .collection('events')
           .doc(widget.eventId)
           .collection('gifts')
           .doc(widget.giftId)
-          .update({
-        'name': _nameController.text,
-        'description': _descriptionController.text,
-        'category': _categoryController.text,
-        'price': double.tryParse(_priceController.text) ?? 0.0,
-        'isPledged': _isPledged,
-        // Add logic to upload and save the image if necessary
-      });
+          .update({'isPledged': true});
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gift details updated successfully!')),
-      );
-    } catch (e) {
-      print("Error updating gift details: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update gift details')),
+        SnackBar(content: Text('You have pledged this gift!')),
       );
     }
   }
@@ -75,142 +59,33 @@ class _FGiftDetailsPageState extends State<FGiftDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift Details'),
+        title: Text('Friend\'s Gift Details', style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
-      body: FutureBuilder(
-        future: fetchGiftDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading gift details'));
-          } else if (!snapshot.hasData) {
-            return Center(child: Text('Gift not found'));
-          }
-
-          final gift = snapshot.data as Map<String, dynamic>;
-
-          // Initialize fields if not already populated
-          _nameController.text = gift['name'] ?? '';
-          _descriptionController.text = gift['description'] ?? '';
-          _categoryController.text = gift['category'] ?? '';
-          _priceController.text = gift['price']?.toString() ?? '';
-          _isPledged = gift['isPledged'] ?? false;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Gift Name'),
-                    enabled: !_isPledged,
-                    validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter a name' : null,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
-                    enabled: !_isPledged,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _categoryController,
-                    decoration: InputDecoration(labelText: 'Category'),
-                    enabled: !_isPledged,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _priceController,
-                    decoration: InputDecoration(labelText: 'Price'),
-                    enabled: !_isPledged,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter a price';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Enter a valid number';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Status: ${_isPledged ? "Pledged" : "Available"}',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Switch(
-                        value: _isPledged,
-                        onChanged: !_isPledged
-                            ? (value) {
-                          setState(() {
-                            _isPledged = value;
-                          });
-                        }
-                            : null, // Disable switch if pledged
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: !_isPledged ? updateGiftDetails : null,
-                      child: Text('Save Changes'),
-                    ),
-                  ),
-                ],
+      body: _giftData == null
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Name: ${_giftData!['name']}', style: TextStyle(fontFamily: "Parkinsans", fontSize: 18)),
+            SizedBox(height: 8),
+            Text('Description: ${_giftData!['description']}', style: TextStyle(fontFamily: "Parkinsans")),
+            SizedBox(height: 8),
+            Text('Category: ${_giftData!['category']}', style: TextStyle(fontFamily: "Parkinsans")),
+            SizedBox(height: 8),
+            Text('Price: ${_giftData!['price']}', style: TextStyle(fontFamily: "Parkinsans")),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isPledged ? null : _pledgeGift,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
               ),
+              child: Text(_isPledged ? 'Pledged' : 'Pledge', style: TextStyle(fontFamily: "Parkinsans")),
             ),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => EventListPage()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-              break;
-          }
-        },
-        currentIndex: 2,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

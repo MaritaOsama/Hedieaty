@@ -1,16 +1,11 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'my_event_list.dart';
-import 'profile.dart';
-import 'home_page.dart';
 
 class GiftDetailsPage extends StatefulWidget {
-  final String giftId;
   final String eventId;
+  final String giftId;
 
-  GiftDetailsPage({required this.giftId, required this.eventId});
+  const GiftDetailsPage({required this.eventId, required this.giftId, Key? key}) : super(key: key);
 
   @override
   _GiftDetailsPageState createState() => _GiftDetailsPageState();
@@ -18,35 +13,40 @@ class GiftDetailsPage extends StatefulWidget {
 
 class _GiftDetailsPageState extends State<GiftDetailsPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Text editing controllers
+  bool _isPledged = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
-  bool _isPledged = false;
-  File? _selectedImage;
+  @override
+  void initState() {
+    super.initState();
+    _loadGiftDetails();
+  }
 
-  Future<Map<String, dynamic>?> fetchGiftDetails() async {
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.eventId)
-          .collection('gifts')
-          .doc(widget.giftId)
-          .get();
-      return doc.exists ? doc.data() : null;
-    } catch (e) {
-      print("Error fetching gift details: $e");
-      return null;
+  Future<void> _loadGiftDetails() async {
+    final giftDoc = await FirebaseFirestore.instance
+        .collection('events')
+        .doc(widget.eventId)
+        .collection('gifts')
+        .doc(widget.giftId)
+        .get();
+
+    final data = giftDoc.data();
+    if (data != null) {
+      setState(() {
+        _isPledged = data['isPledged'] ?? false;
+        _nameController.text = data['name'] ?? '';
+        _descriptionController.text = data['description'] ?? '';
+        _categoryController.text = data['category'] ?? '';
+        _priceController.text = data['price'].toString();
+      });
     }
   }
 
-  Future<void> updateGiftDetails() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    try {
+  Future<void> _saveGiftDetails() async {
+    if (_formKey.currentState!.validate()) {
       await FirebaseFirestore.instance
           .collection('events')
           .doc(widget.eventId)
@@ -56,17 +56,12 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
         'name': _nameController.text,
         'description': _descriptionController.text,
         'category': _categoryController.text,
-        'price': double.tryParse(_priceController.text) ?? 0.0,
+        'price': double.parse(_priceController.text),
         'isPledged': _isPledged,
-        // Add logic to upload and save the image if necessary
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gift details updated successfully!')),
-      );
-    } catch (e) {
-      print("Error updating gift details: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update gift details')),
       );
     }
   }
@@ -75,142 +70,75 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift Details'),
+        title: Text('My Gift Details',
+            style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
-      body: FutureBuilder(
-        future: fetchGiftDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading gift details'));
-          } else if (!snapshot.hasData) {
-            return Center(child: Text('Gift not found'));
-          }
-
-          final gift = snapshot.data as Map<String, dynamic>;
-
-          // Initialize fields if not already populated
-          _nameController.text = gift['name'] ?? '';
-          _descriptionController.text = gift['description'] ?? '';
-          _categoryController.text = gift['category'] ?? '';
-          _priceController.text = gift['price']?.toString() ?? '';
-          _isPledged = gift['isPledged'] ?? false;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Gift Name'),
-                    enabled: !_isPledged,
-                    validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter a name' : null,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
-                    enabled: !_isPledged,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _categoryController,
-                    decoration: InputDecoration(labelText: 'Category'),
-                    enabled: !_isPledged,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _priceController,
-                    decoration: InputDecoration(labelText: 'Price'),
-                    enabled: !_isPledged,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter a price';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Enter a valid number';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Status: ${_isPledged ? "Pledged" : "Available"}',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Switch(
-                        value: _isPledged,
-                        onChanged: !_isPledged
-                            ? (value) {
-                          setState(() {
-                            _isPledged = value;
-                          });
-                        }
-                            : null, // Disable switch if pledged
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: !_isPledged ? updateGiftDetails : null,
-                      child: Text('Save Changes'),
-                    ),
-                  ),
-                ],
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              controller: _nameController,
+              style: TextStyle(fontFamily: "Parkinsans"),
+              decoration: InputDecoration(
+                labelText: 'Name',
+                labelStyle: TextStyle(fontFamily: "Parkinsans")
+              ),
+              validator: (value) => value!.isEmpty ? 'Name is required' : null,
+            ),
+            SizedBox(height: 12),
+            TextFormField(
+              controller: _descriptionController,
+              style: TextStyle(fontFamily: "Parkinsans"),
+              decoration: InputDecoration(
+                labelText: 'Description',
+                labelStyle: TextStyle(fontFamily: "Parkinsans"),
               ),
             ),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => EventListPage()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-              break;
-          }
-        },
-        currentIndex: 2,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+            SizedBox(height: 12),
+            TextFormField(
+              controller: _categoryController,
+              style: TextStyle(fontFamily: "Parkinsans"),
+              decoration: InputDecoration(
+                labelText: 'Category',
+                labelStyle: TextStyle(fontFamily: "Parkinsans"),
+              ),
+            ),
+            SizedBox(height: 12),
+            TextFormField(
+              controller: _priceController,
+              style: TextStyle(fontFamily: "Parkinsans"),
+              decoration: InputDecoration(
+                labelText: 'Price',
+                labelStyle: TextStyle(fontFamily: "Parkinsans"),
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) =>
+              value!.isEmpty ? 'Price is required' : null,
+            ),
+            SizedBox(height: 16),
+            SwitchListTile(
+              title: Text('Pledged', style: TextStyle(fontFamily: "Parkinsans")),
+              activeColor: Colors.blueAccent,
+              value: _isPledged,
+              onChanged: _isPledged
+                  ? null
+                  : (value) {
+                setState(() => _isPledged = value);
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveGiftDetails,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+              ),
+              child: Text('Save', style: TextStyle(fontFamily: "Parkinsans")),
+            ),
+          ],
+        ),
       ),
     );
   }
