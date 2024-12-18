@@ -68,6 +68,7 @@ flutter:
   assets:
     - asset/images/Female_Icon (2).png
     - asset/images/Male_Icon.png
+    - asset/images/person icon.jpg
 
   fonts:
     - family: Parkinsans

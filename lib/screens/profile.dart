@@ -158,14 +158,11 @@ class _ProfilePageState extends State<ProfilePage> {
               final userData = snapshot.data!.data() as Map<String, dynamic>;
               String imageUrl = userData['imageUrl'] ?? '';
               return CircleAvatar(
-                radius: 60,
-                backgroundImage: imageUrl.isNotEmpty
-                  ? (imageUrl.startsWith('http')
-                    ? NetworkImage(imageUrl)
-                    : AssetImage(imageUrl)) as ImageProvider
-                  : AssetImage("assets/default-profile.png"),
+                radius: 80,
+                backgroundImage: AssetImage("asset/images/person icon.jpg"),
               );
-              },
+
+            },
         ),
           SizedBox(height: 20),
             Text(
