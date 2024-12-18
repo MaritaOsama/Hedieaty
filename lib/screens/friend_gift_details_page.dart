@@ -1,92 +1,141 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+  import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+  import 'package:flutter/material.dart';
 
 
-class FGiftDetailsPage extends StatefulWidget {
-  final String eventId;
-  final String giftId;
+  class FGiftDetailsPage extends StatefulWidget {
+    final String eventId;
+    final String giftId;
 
-  const FGiftDetailsPage({required this.eventId, required this.giftId, Key? key}) : super(key: key);
+    const FGiftDetailsPage({required this.eventId, required this.giftId, Key? key}) : super(key: key);
 
-  @override
-  _FGiftDetailsPageState createState() => _FGiftDetailsPageState();
-}
-
-class _FGiftDetailsPageState extends State<FGiftDetailsPage> {
-  bool _isPledged = false;
-  Map<String, dynamic>? _giftData;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadGiftDetails();
+    @override
+    _FGiftDetailsPageState createState() => _FGiftDetailsPageState();
   }
 
-  Future<void> _loadGiftDetails() async {
-    final giftDoc = await FirebaseFirestore.instance
-        .collection('events')
-        .doc(widget.eventId)
-        .collection('gifts')
-        .doc(widget.giftId)
-        .get();
+  class _FGiftDetailsPageState extends State<FGiftDetailsPage> {
+    bool _isPledged = false;
+    Map<String, dynamic>? _giftData;
 
-    final data = giftDoc.data();
-    if (data != null) {
-      setState(() {
-        _giftData = data;
-        _isPledged = data['isPledged'] ?? false;
-      });
+    @override
+    void initState() {
+      super.initState();
+      _loadGiftDetails();
     }
-  }
 
-  Future<void> _pledgeGift() async {
-    if (!_isPledged) {
-      setState(() => _isPledged = true);
-      await FirebaseFirestore.instance
+    Future<void> _loadGiftDetails() async {
+      final giftDoc = await FirebaseFirestore.instance
           .collection('events')
           .doc(widget.eventId)
           .collection('gifts')
           .doc(widget.giftId)
-          .update({'isPledged': true});
+          .get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You have pledged this gift!')),
+      final data = giftDoc.data();
+      if (data != null) {
+        setState(() {
+          _giftData = data;
+          _isPledged = data['isPledged'] ?? false;
+        });
+      }
+    }
+
+
+    Future<void> _pledgeGift() async {
+      if (!_isPledged) {
+        // Get the current user's ID
+        final currentUser = FirebaseAuth.instance.currentUser;
+        final currentUserUid = currentUser?.uid;
+
+        if (currentUserUid == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('You need to be logged in to pledge a gift.')),
+          );
+          return;
+        }
+
+        // Fetch the current user's name from Firestore
+        String? currentUserName;
+        try {
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUserUid)
+              .get();
+
+          currentUserName = userDoc.data()?['name'];
+
+          if (currentUserName == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to fetch your name. Please try again.')),
+            );
+            return;
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to fetch your name. Please try again.')),
+          );
+          return;
+        }
+
+        setState(() => _isPledged = true);
+
+        try {
+          await FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .collection('gifts')
+              .doc(widget.giftId)
+              .update({
+            'isPledged': true,
+            'pledger': currentUserName, // Save the user's name
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('You have pledged this gift!')),
+          );
+        } catch (e) {
+          setState(() => _isPledged = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to pledge the gift. Please try again.')),
+          );
+        }
+      }
+    }
+
+
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Friend\'s Gift Details', style: TextStyle(fontFamily: "Parkinsans")),
+          backgroundColor: Colors.blueAccent,
+        ),
+        body: _giftData == null
+            ? Center(child: CircularProgressIndicator())
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Name: ${_giftData!['name']}', style: TextStyle(fontFamily: "Parkinsans", fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Description: ${_giftData!['description']}', style: TextStyle(fontFamily: "Parkinsans")),
+              SizedBox(height: 8),
+              Text('Category: ${_giftData!['category']}', style: TextStyle(fontFamily: "Parkinsans")),
+              SizedBox(height: 8),
+              Text('Price: ${_giftData!['price']}', style: TextStyle(fontFamily: "Parkinsans")),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isPledged ? null : _pledgeGift,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                ),
+                child: Text(_isPledged ? 'Pledged' : 'Pledge', style: TextStyle(fontFamily: "Parkinsans")),
+              ),
+            ],
+          ),
+        ),
       );
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Friend\'s Gift Details', style: TextStyle(fontFamily: "Parkinsans")),
-        backgroundColor: Colors.blueAccent,
-      ),
-      body: _giftData == null
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Name: ${_giftData!['name']}', style: TextStyle(fontFamily: "Parkinsans", fontSize: 18)),
-            SizedBox(height: 8),
-            Text('Description: ${_giftData!['description']}', style: TextStyle(fontFamily: "Parkinsans")),
-            SizedBox(height: 8),
-            Text('Category: ${_giftData!['category']}', style: TextStyle(fontFamily: "Parkinsans")),
-            SizedBox(height: 8),
-            Text('Price: ${_giftData!['price']}', style: TextStyle(fontFamily: "Parkinsans")),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isPledged ? null : _pledgeGift,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-              ),
-              child: Text(_isPledged ? 'Pledged' : 'Pledge', style: TextStyle(fontFamily: "Parkinsans")),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

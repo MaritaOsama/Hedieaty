@@ -10,14 +10,16 @@ class FGift {
   String id;
   String name;
   String category;
+  String pledger;
   bool isPledged;
 
-  FGift({required this.id, required this.name, required this.category, this.isPledged = false});
+  FGift({required this.id, required this.name, required this.category, required this.pledger, this.isPledged = false});
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'category': category,
+      'pledger': pledger,
       'isPledged': isPledged,
     };
   }
@@ -27,6 +29,7 @@ class FGift {
       id: id,
       name: map['name'] ?? '',
       category: map['category'] ?? '',
+      pledger: map['pledger'] ?? 'Anonymous',
       isPledged: map['isPledged'] ?? false,
     );
   }
@@ -71,145 +74,6 @@ class _FGiftListPageState extends State<FGiftListPage> {
     }
   }
 
-  // void _addGift() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       String newName = '';
-  //       String newCategory = '';
-  //       return AlertDialog(
-  //         title: Text("Add New Gift"),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             TextField(
-  //               decoration: InputDecoration(labelText: "Gift Name"),
-  //               onChanged: (value) {
-  //                 newName = value;
-  //               },
-  //             ),
-  //             TextField(
-  //               decoration: InputDecoration(labelText: "Gift Category"),
-  //               onChanged: (value) {
-  //                 newCategory = value;
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () async {
-  //               if (newName.isNotEmpty && newCategory.isNotEmpty) {
-  //                 FGift newGift = FGift(id: '', name: newName, category: newCategory);
-  //                 try {
-  //                   await giftsCollection.add(newGift.toMap());
-  //                   _loadGifts();
-  //                   Navigator.pop(context);
-  //                 } catch (e) {
-  //                   print("Error adding gift: $e");
-  //                 }
-  //               }
-  //             },
-  //             child: Text("Add Gift"),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-  //             child: Text("Cancel"),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // void _deleteGift(String giftId) async {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: Text("Confirm Delete"),
-  //         content: Text("Are you sure you want to delete this gift?"),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () async {
-  //               try {
-  //                 await giftsCollection.doc(giftId).delete();
-  //                 _loadGifts(); // Reload gifts after deletion
-  //                 Navigator.pop(context);
-  //               } catch (e) {
-  //                 print("Error deleting gift: $e");
-  //               }
-  //             },
-  //             child: Text("Delete"),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.pop(context); // Close the confirmation dialog
-  //             },
-  //             child: Text("Cancel"),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-  //
-  // void _editGift(String giftId, String currentName, String currentCategory) async {
-  //   TextEditingController nameController = TextEditingController(text: currentName);
-  //   TextEditingController categoryController = TextEditingController(text: currentCategory);
-  //
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: Text("Edit Gift"),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             TextField(
-  //               controller: nameController,
-  //               decoration: InputDecoration(labelText: "Gift Name"),
-  //             ),
-  //             TextField(
-  //               controller: categoryController,
-  //               decoration: InputDecoration(labelText: "Gift Category"),
-  //             ),
-  //           ],
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () async {
-  //               String newName = nameController.text;
-  //               String newCategory = categoryController.text;
-  //
-  //               if (newName.isNotEmpty && newCategory.isNotEmpty) {
-  //                 try {
-  //                   await giftsCollection.doc(giftId).update({
-  //                     'name': newName,
-  //                     'category': newCategory,
-  //                   });
-  //                   _loadGifts();
-  //                   Navigator.pop(context);
-  //                 } catch (e) {
-  //                   print("Error editing gift: $e");
-  //                 }
-  //               }
-  //             },
-  //             child: Text("Save Changes"),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.pop(context); // Close the dialog without saving
-  //             },
-  //             child: Text("Cancel"),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -239,11 +103,6 @@ class _FGiftListPageState extends State<FGiftListPage> {
                     DropdownMenuItem(value: "status", child: Text("Sort by Status")),
                   ],
                 ),
-                // ElevatedButton(
-                //   onPressed: _addGift,
-                //   style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-                //   child: Text("Add Gift"),
-                // ),
               ],
             ),
           ),
@@ -254,14 +113,6 @@ class _FGiftListPageState extends State<FGiftListPage> {
                 final gift = gifts[index];
                 return GiftCard(
                   gift: gift,
-                  // onEdit: () {
-                  //   if (!gift.isPledged) {
-                  //     _editGift(gift.id, gift.name, gift.category); // Use gift.id for editing
-                  //   }
-                  // },
-                  // onDelete: () {
-                  //   _deleteGift(gift.id); // Use gift.id for deleting
-                  // },
                   onViewDetails: () {
                     // Navigate to GiftDetailsPage
                     Navigator.push(
