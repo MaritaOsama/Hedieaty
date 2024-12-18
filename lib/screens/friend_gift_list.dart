@@ -188,14 +188,10 @@ class _FGiftListPageState extends State<FGiftListPage> {
 
 class GiftCard extends StatelessWidget {
   final FGift gift;
-  // final VoidCallback onEdit;
-  // final VoidCallback onDelete;
   final VoidCallback onViewDetails; // New callback for viewing details
 
   GiftCard({
     required this.gift,
-    // required this.onEdit,
-    // required this.onDelete,
     required this.onViewDetails,
   });
 
@@ -217,14 +213,6 @@ class GiftCard extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // IconButton(
-              //   onPressed: onEdit,
-              //   icon: Icon(Icons.edit, color: Colors.orange),
-              // ),
-              // IconButton(
-              //   onPressed: onDelete,
-              //   icon: Icon(Icons.delete, color: Colors.red),
-              // ),
             ],
           ),
         ),
