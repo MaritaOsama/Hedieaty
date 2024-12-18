@@ -77,7 +77,7 @@ class _GiftListPageState extends State<GiftListPage> {
         String newName = '';
         String newCategory = '';
         return AlertDialog(
-          title: Text("Add New Gift"),
+          title: Text("Add New Gift", style: TextStyle(fontFamily: "Parkinsans")),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -214,7 +214,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.eventName} Gift List"),
+        title: Text("${widget.eventName} Gift List", style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -233,15 +233,15 @@ class _GiftListPageState extends State<GiftListPage> {
                     }
                   },
                   items: [
-                    DropdownMenuItem(value: "name", child: Text("Sort by Name")),
-                    DropdownMenuItem(value: "category", child: Text("Sort by Category")),
-                    DropdownMenuItem(value: "status", child: Text("Sort by Status")),
+                    DropdownMenuItem(value: "name", child: Text("Sort by Name", style: TextStyle(fontFamily: "Parkinsans"))),
+                    DropdownMenuItem(value: "category", child: Text("Sort by Category", style: TextStyle(fontFamily: "Parkinsans"))),
+                    DropdownMenuItem(value: "status", child: Text("Sort by Status", style: TextStyle(fontFamily: "Parkinsans"))),
                   ],
                 ),
                 ElevatedButton(
                   onPressed: _addGift,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-                  child: Text("Add Gift"),
+                  child: Text("Add Gift", style: TextStyle(fontFamily: "Parkinsans")),
                 ),
               ],
             ),
@@ -359,6 +359,7 @@ class GiftCard extends StatelessWidget {
             style: TextStyle(
               color: gift.isPledged ? Colors.grey : Colors.black,
               fontWeight: FontWeight.bold,
+              fontFamily: "Parkinsans",
             ),
           ),
           subtitle: Text(gift.category),

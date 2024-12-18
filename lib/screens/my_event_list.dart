@@ -107,7 +107,7 @@ class _EventListPageState extends State<EventListPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Event'),
+          title: Text('Add Event', style: TextStyle(fontFamily: "Parkinsans"),),
           content: Column(
             children: [
               TextField(
@@ -197,7 +197,7 @@ class _EventListPageState extends State<EventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Event List"),
+        title: Text("My Event List", style: TextStyle(fontFamily: "Parkinsans"),),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -212,7 +212,7 @@ class _EventListPageState extends State<EventListPage> {
             child: Center(
               child: Text(
                 "Explore Events",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: "Parkinsans"),
               ),
             ),
           ),
@@ -224,9 +224,9 @@ class _EventListPageState extends State<EventListPage> {
             child: DropdownButtonFormField<String>(
               value: sortBy,
               items: [
-                DropdownMenuItem(value: 'name', child: Text('Sort by Name')),
-                DropdownMenuItem(value: 'category', child: Text('Sort by Category')),
-                DropdownMenuItem(value: 'status', child: Text('Sort by Status')),
+                DropdownMenuItem(value: 'name', child: Text('Sort by Name', style: TextStyle(fontFamily: "Parkinsans"))),
+                DropdownMenuItem(value: 'category', child: Text('Sort by Category', style: TextStyle(fontFamily: "Parkinsans"))),
+                DropdownMenuItem(value: 'status', child: Text('Sort by Status', style: TextStyle(fontFamily: "Parkinsans"))),
               ],
               onChanged: (String? value) {
                 if (value != null) {
@@ -270,7 +270,7 @@ class _EventListPageState extends State<EventListPage> {
                         event.name,
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text("${event.category} - ${event.status}"),
+                      subtitle: Text("${event.category} - ${event.status}", style: TextStyle(fontFamily: "Parkinsans")),
                       trailing: Icon(Icons.arrow_forward_ios, size: 18),
                         onTap: () async {
                           // Fetch the event details using the event ID

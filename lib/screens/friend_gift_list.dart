@@ -79,7 +79,7 @@ class _FGiftListPageState extends State<FGiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.eventName} Gift List"),
+        title: Text("${widget.eventName} Gift List", style: TextStyle(fontFamily: "Parkinsans"),),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -207,6 +207,7 @@ class GiftCard extends StatelessWidget {
             style: TextStyle(
               color: gift.isPledged ? Colors.grey : Colors.black,
               fontWeight: FontWeight.bold,
+              fontFamily: "Parkinsans",
             ),
           ),
           subtitle: Text(gift.category),
