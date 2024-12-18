@@ -16,7 +16,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final String currentUserUid = FirebaseAuth.instance.currentUser?.uid ?? '';
   String userName = "";
   int numberOfFriends = 0;
-  List<String> events = [];
+  List<Map<String, dynamic>> events = [];
   String profileImageUrl = "";
 
   @override
@@ -55,8 +55,17 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         events = eventSnapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          final date = (data['date'] as Timestamp).toDate(); // Convert Timestamp
-          return "${data['name']} (${data['category']}) - ${date})";
+          final date = (data['date'] as Timestamp).toDate();
+          final eventId = doc.id;
+          final eventName = data['name'] ?? 'Unnamed Event';
+          final eventCategory = data['category'] ?? 'Uncategorized';
+
+          return {
+            'id': eventId,
+            'name': eventName,
+            'category': eventCategory,
+            'date': date,
+          };
         }).toList();
       });
     } catch (e) {
@@ -198,11 +207,16 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ListView.builder(
                 itemCount: events.length,
                 itemBuilder: (context, index) {
+                  final event = events[index];
+                  final String eventId = event['id'];
+                  final String eventName = event['name'];
+                  final String category = event['category'];
+                  final DateTime date = event['date'];
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(
                       title: Text(
-                        events[index],
+                        "$eventName ($category) - ${date.toLocal()}",
                         style: TextStyle(
                           fontFamily: "Parkinsans",
                           fontSize: 18,
@@ -214,7 +228,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => GiftListPage(eventId: '',eventName: ''),
+                            builder: (context) => GiftListPage(eventId: eventId ,eventName: eventName),
                           ),
                         );
                       },
