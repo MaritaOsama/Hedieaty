@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
 import 'my_event_list.dart';
 import 'my_gift_list.dart';
+import 'notification_list.dart';
 import 'pledged_gifts.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -138,70 +139,158 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+      appBar: AppBar(
+        title: Row(
           children: [
-          StreamBuilder<DocumentSnapshot>(
-            stream: _firestore.collection('users').doc(currentUserUid).snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-              if (!snapshot.hasData || snapshot.data!.data() == null) {
-                return Text('No user data found');
-              }
-              final userData = snapshot.data!.data() as Map<String, dynamic>;
-              String imageUrl = userData['imageUrl'] ?? '';
-              return CircleAvatar(
-                radius: 80,
-                backgroundImage: AssetImage("asset/images/person icon.jpg"),
-              );
-
-            },
+            Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 35,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+                fontFamily: "Parkinsans",
+              ),
+            ),
+          ],
         ),
-          SizedBox(height: 20),
-            Text(
-              userName.isNotEmpty ? userName : "Loading...",
-              style: TextStyle(
-                fontFamily: "Parkinsans",
-                fontSize: 30,
-                color: Colors.blueAccent,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              '$numberOfFriends Friends',
-              style: TextStyle(
-                fontFamily: "Parkinsans",
-                fontSize: 18,
-                color: Colors.black54,
-              ),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _showNewEventDialog(context),
-                  icon: Icon(Icons.event, color: Colors.deepPurple),
-                  label: Text('New Event'),
+        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications,
+                  size: 30,
+                  color: Colors.white,
                 ),
-                SizedBox(width: 20),
-                ElevatedButton.icon(
-                  onPressed: () => _showEditProfileDialog(context),
-                  icon: Icon(Icons.edit, color: Colors.deepPurple),
-                  label: Text('Edit Profile'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(currentUserId: currentUserUid), // Pass currentUserId
+                    ),
+                  );
+                },
+              ),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUserUid)
+                    .collection('notifications')
+                    .where('isRead', isEqualTo: false)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return Container();
+                  final newNotificationCount = snapshot.data!.docs.length;
+
+                  // Show pop-up notification (SnackBar or Dialog) when a new notification is added
+                  Future.delayed(Duration.zero, () {
+                    if (newNotificationCount > 0) {
+                      // Show a SnackBar or any custom popup
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$newNotificationCount new notifications'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  });
+
+                  return Positioned(
+                    right: 11,
+                    top: 11,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        '$newNotificationCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(  // Wrap the entire body in SingleChildScrollView
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              StreamBuilder<DocumentSnapshot>(
+                stream: _firestore.collection('users').doc(currentUserUid).snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+                  if (!snapshot.hasData || snapshot.data!.data() == null) {
+                    return Text('No user data found');
+                  }
+                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  String imageUrl = userData['imageUrl'] ?? '';
+                  return CircleAvatar(
+                    radius: 80,
+                    backgroundImage: AssetImage("asset/images/person icon.jpg"),
+                  );
+                },
+              ),
+              SizedBox(height: 20),
+              Text(
+                userName.isNotEmpty ? userName : "Loading...",
+                style: TextStyle(
+                  fontFamily: "Parkinsans",
+                  fontSize: 30,
+                  color: Colors.blueAccent,
                 ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
+              ),
+              SizedBox(height: 10),
+              Text(
+                '$numberOfFriends Friends',
+                style: TextStyle(
+                  fontFamily: "Parkinsans",
+                  fontSize: 18,
+                  color: Colors.black54,
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _showNewEventDialog(context),
+                    icon: Icon(Icons.event, color: Colors.deepPurple),
+                    label: Text('New Event'),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton.icon(
+                    onPressed: () => _showEditProfileDialog(context),
+                    icon: Icon(Icons.edit, color: Colors.deepPurple),
+                    label: Text('Edit Profile'),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              // Remove Expanded here and use ListView.builder inside SingleChildScrollView
+              ListView.builder(
+                shrinkWrap: true,  // Prevents the ListView from taking up too much space
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
@@ -233,38 +322,31 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
                 },
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomSheet: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to the Pledged Gifts page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MyPledgedGiftsPage(),
+              SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate to the Pledged Gifts page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MyPledgedGiftsPage(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.card_giftcard, color: Colors.deepPurple),
+                label: Text(
+                  'View Pledged Gifts',
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
                   ),
-                );
-              },
-              icon: Icon(Icons.card_giftcard, color: Colors.deepPurple),
-              label: Text(
-                'View Pledged Gifts',
-                style: TextStyle(
-                  fontFamily: "Parkinsans",
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-            ),
-            SizedBox(height: 10),
-          ],
+              SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -310,6 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
 
   void _showNewEventDialog(BuildContext context) {
     TextEditingController eventNameController = TextEditingController();
