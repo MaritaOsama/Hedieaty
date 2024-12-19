@@ -237,78 +237,79 @@ class _EventListPageState extends State<EventListPage> {
         title: Text("My Event List", style: TextStyle(fontFamily: "Parkinsans"),),
         backgroundColor: Colors.blueAccent,
       ),
-      body: Column(
-        children: [
-          // Header Section
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-            ),
-            child: Center(
-              child: Text(
-                "Explore Events",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: "Parkinsans"),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header Section
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              ),
+              child: Center(
+                child: Text(
+                  "Explore Events",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: "Parkinsans"),
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 16),
+            SizedBox(height: 16),
 
-          // Dropdown for Sorting
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: DropdownButtonFormField<String>(
-              value: sortBy,
-              items: [
-                DropdownMenuItem(value: 'name', child: Text('Sort by Name', style: TextStyle(fontFamily: "Parkinsans"))),
-                DropdownMenuItem(value: 'category', child: Text('Sort by Category', style: TextStyle(fontFamily: "Parkinsans"))),
-                DropdownMenuItem(value: 'status', child: Text('Sort by Status', style: TextStyle(fontFamily: "Parkinsans"))),
-              ],
-              onChanged: (String? value) {
-                if (value != null) {
-                  _sortEvents(value);
-                }
-              },
-              decoration: InputDecoration(
-                labelText: "Sort Events",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            // Dropdown for Sorting
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: DropdownButtonFormField<String>(
+                value: sortBy,
+                items: [
+                  DropdownMenuItem(value: 'name', child: Text('Sort by Name', style: TextStyle(fontFamily: "Parkinsans"))),
+                  DropdownMenuItem(value: 'category', child: Text('Sort by Category', style: TextStyle(fontFamily: "Parkinsans"))),
+                  DropdownMenuItem(value: 'status', child: Text('Sort by Status', style: TextStyle(fontFamily: "Parkinsans"))),
+                ],
+                onChanged: (String? value) {
+                  if (value != null) {
+                    _sortEvents(value);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: "Sort Events",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 16),
+            SizedBox(height: 16),
 
-          // Event List
-          Expanded(
-            child: events.isEmpty
-                ? Center(child: Text("No events added yet"))
-                : ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.event,
-                        color: event.status == "Upcoming"
-                            ? Colors.green
-                            : event.status == "Past"
-                            ? Colors.grey
-                            : Colors.blue,
-                        size: 40,
+            // Event List
+            Expanded(
+              child: events.isEmpty
+                  ? Center(child: Text("No events added yet"))
+                  : ListView.builder(
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                      title: Text(
-                        event.name,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text("${event.category} - ${event.status}", style: TextStyle(fontFamily: "Parkinsans")),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 18),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.event,
+                          color: event.status == "Upcoming"
+                              ? Colors.green
+                              : event.status == "Past"
+                              ? Colors.grey
+                              : Colors.blue,
+                          size: 40,
+                        ),
+                        title: Text(
+                          event.name,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text("${event.category} - ${event.status}", style: TextStyle(fontFamily: "Parkinsans")),
+                        trailing: Icon(Icons.arrow_forward_ios, size: 18),
                         onTap: () async {
                           // Fetch the event details using the event ID
                           DocumentSnapshot doc = await FirebaseFirestore.instance
@@ -333,13 +334,14 @@ class _EventListPageState extends State<EventListPage> {
                             ),
                           );
                         },
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddEventDialog,

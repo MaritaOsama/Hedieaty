@@ -217,67 +217,69 @@ class _GiftListPageState extends State<GiftListPage> {
         title: Text("${widget.eventName} Gift List", style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                DropdownButton<String>(
-                  value: sortBy,
-                  icon: Icon(Icons.sort),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      _sortGifts(newValue);
-                    }
-                  },
-                  items: [
-                    DropdownMenuItem(value: "name", child: Text("Sort by Name", style: TextStyle(fontFamily: "Parkinsans"))),
-                    DropdownMenuItem(value: "category", child: Text("Sort by Category", style: TextStyle(fontFamily: "Parkinsans"))),
-                    DropdownMenuItem(value: "status", child: Text("Sort by Status", style: TextStyle(fontFamily: "Parkinsans"))),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: _addGift,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-                  child: Text("Add Gift", style: TextStyle(fontFamily: "Parkinsans")),
-                ),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  DropdownButton<String>(
+                    value: sortBy,
+                    icon: Icon(Icons.sort),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        _sortGifts(newValue);
+                      }
+                    },
+                    items: [
+                      DropdownMenuItem(value: "name", child: Text("Sort by Name", style: TextStyle(fontFamily: "Parkinsans"))),
+                      DropdownMenuItem(value: "category", child: Text("Sort by Category", style: TextStyle(fontFamily: "Parkinsans"))),
+                      DropdownMenuItem(value: "status", child: Text("Sort by Status", style: TextStyle(fontFamily: "Parkinsans"))),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: _addGift,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+                    child: Text("Add Gift", style: TextStyle(fontFamily: "Parkinsans")),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: gifts.length,
-              itemBuilder: (context, index) {
-                final gift = gifts[index];
-                return GiftCard(
-                  gift: gift,
-                  onEdit: () {
-                    if (!gift.isPledged) {
-                      _editGift(gift.id, gift.name, gift.category); // Use gift.id for editing
-                    }
-                  },
-                  onDelete: () {
-                    _deleteGift(gift.id); // Use gift.id for deleting
-                  },
-                  onViewDetails: () {
-                    // Navigate to GiftDetailsPage
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GiftDetailsPage(
-                          giftId: gift.id, // Pass gift ID
-                          eventId: widget.eventId, // Pass event ID
+            Expanded(
+              child: ListView.builder(
+                itemCount: gifts.length,
+                itemBuilder: (context, index) {
+                  final gift = gifts[index];
+                  return GiftCard(
+                    gift: gift,
+                    onEdit: () {
+                      if (!gift.isPledged) {
+                        _editGift(gift.id, gift.name, gift.category); // Use gift.id for editing
+                      }
+                    },
+                    onDelete: () {
+                      _deleteGift(gift.id); // Use gift.id for deleting
+                    },
+                    onViewDetails: () {
+                      // Navigate to GiftDetailsPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GiftDetailsPage(
+                            giftId: gift.id, // Pass gift ID
+                            eventId: widget.eventId, // Pass event ID
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {

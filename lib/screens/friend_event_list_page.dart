@@ -115,133 +115,135 @@ class _FEventListPageState extends State<FEventListPage> {
         ),
         backgroundColor: Colors.blueAccent,
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          // Header Section
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius:
-              BorderRadius.vertical(bottom: Radius.circular(20)),
-            ),
-            child: Center(
-              child: Text(
-                "Explore ${widget.friendName}'s Events",
-                style: TextStyle(
-                  fontFamily: "Parkinsans",
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: SingleChildScrollView(
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Column(
+          children: [
+            // Header Section
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius:
+                BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-            ),
-          ),
-          SizedBox(height: 16),
-
-          // Dropdown for Sorting
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: DropdownButtonFormField<String>(
-              value: sortBy,
-              items: [
-                DropdownMenuItem(
-                  value: 'name',
-                  child: Text('Sort by Name'),
-                ),
-                DropdownMenuItem(
-                  value: 'category',
-                  child: Text('Sort by Category'),
-                ),
-                DropdownMenuItem(
-                  value: 'status',
-                  child: Text('Sort by Status'),
-                ),
-              ],
-              onChanged: (String? value) {
-                if (value != null) {
-                  _sortEvents(value);
-                }
-              },
-              decoration: InputDecoration(
-                labelText: "Sort Events",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
-
-          // Event List
-          Expanded(
-            child: events.isEmpty
-                ? Center(
-              child: Text(
-                "No events found",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
-              ),
-            )
-                : ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.event,
-                        color: event.status == "Upcoming"
-                            ? Colors.green
-                            : event.status == "Past"
-                            ? Colors.grey
-                            : Colors.blue,
-                        size: 40,
-                      ),
-                      title: Text(
-                        event.name,
-                        style: TextStyle(
-                          fontFamily: "Parkinsans",
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "${event.category} - ${event.status}",
-                        style: TextStyle(
-                          fontFamily: "Parkinsans",
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      trailing:
-                      Icon(Icons.arrow_forward_ios, size: 18),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FGiftListPage(eventId: event.id, eventName: event.name),
-                          ),
-                        );
-                      },
-                    ),
+              child: Center(
+                child: Text(
+                  "Explore ${widget.friendName}'s Events",
+                  style: TextStyle(
+                    fontFamily: "Parkinsans",
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              },
+                ),
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: 16),
+
+            // Dropdown for Sorting
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: DropdownButtonFormField<String>(
+                value: sortBy,
+                items: [
+                  DropdownMenuItem(
+                    value: 'name',
+                    child: Text('Sort by Name'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'category',
+                    child: Text('Sort by Category'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'status',
+                    child: Text('Sort by Status'),
+                  ),
+                ],
+                onChanged: (String? value) {
+                  if (value != null) {
+                    _sortEvents(value);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: "Sort Events",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+
+            // Event List
+            Expanded(
+              child: events.isEmpty
+                  ? Center(
+                child: Text(
+                  "No events found",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                ),
+              )
+                  : ListView.builder(
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.event,
+                          color: event.status == "Upcoming"
+                              ? Colors.green
+                              : event.status == "Past"
+                              ? Colors.grey
+                              : Colors.blue,
+                          size: 40,
+                        ),
+                        title: Text(
+                          event.name,
+                          style: TextStyle(
+                            fontFamily: "Parkinsans",
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          "${event.category} - ${event.status}",
+                          style: TextStyle(
+                            fontFamily: "Parkinsans",
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        trailing:
+                        Icon(Icons.arrow_forward_ios, size: 18),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FGiftListPage(eventId: event.id, eventName: event.name),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
