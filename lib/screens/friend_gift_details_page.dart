@@ -80,6 +80,7 @@ import 'friend_gift_list.dart';
         setState(() => _isPledged = true);
 
         try {
+          // Update the gift document with the pledged status and pledger's name
           await FirebaseFirestore.instance
               .collection('events')
               .doc(widget.eventId)
@@ -94,10 +95,37 @@ import 'friend_gift_list.dart';
             SnackBar(content: Text('You have pledged this gift!')),
           );
 
+          // Now, send a notification to the event creator
+          final eventDoc = await FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .get();
+
+          final eventCreatorId = eventDoc.data()?['userId'];
+          if (eventCreatorId != null) {
+            // Send notification to the event creator
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(eventCreatorId)
+                .collection('notifications')
+                .add({
+              'title': 'Pledged Gift',
+              'type': 'gift_pledged',
+              'message': '$currentUserName has pledged a gift for your event.',
+              'timestamp': FieldValue.serverTimestamp(),
+              'isRead': false,
+            });
+          }
+
+
           // Navigate to the Gift List page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => FGiftListPage(eventId: widget.eventId, eventName: "Event Name"),
+            MaterialPageRoute(
+              builder: (context) => FGiftListPage(
+                eventId: widget.eventId,
+                eventName: "Event Name", // You can pass the actual event name here
+              ),
             ),
           );
         } catch (e) {
@@ -108,6 +136,7 @@ import 'friend_gift_list.dart';
         }
       }
     }
+
 
 
 
