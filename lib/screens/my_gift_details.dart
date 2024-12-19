@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-
 class GiftDetailsPage extends StatefulWidget {
   final String eventId;
   final String giftId;
@@ -115,8 +114,6 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                 labelStyle: TextStyle(fontFamily: "Parkinsans"),
               ),
               keyboardType: TextInputType.number,
-              validator: (value) =>
-              value!.isEmpty ? 'Price is required' : null,
             ),
             SizedBox(height: 16),
             SwitchListTile(
