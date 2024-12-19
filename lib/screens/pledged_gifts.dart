@@ -20,10 +20,13 @@ class MyPledgedGiftsPage extends StatelessWidget {
       // Iterate through events and fetch pledged gifts
       for (var eventDoc in eventsSnapshot.docs) {
         String eventId = eventDoc.id;
+
+        // Fetch only pledged gifts for the current event
         QuerySnapshot giftsSnapshot = await _firestore
             .collection('events')
             .doc(eventId)
             .collection('gifts')
+            .where('isPledged', isEqualTo: true) // Filter for pledged gifts
             .get();
 
         for (var giftDoc in giftsSnapshot.docs) {
@@ -40,6 +43,7 @@ class MyPledgedGiftsPage extends StatelessWidget {
     }
     return pledgedGifts;
   }
+
 
   @override
   Widget build(BuildContext context) {
