@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import 'my_gift_list.dart';
 
 class GiftDetailsPage extends StatefulWidget {
@@ -79,13 +79,76 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
     }
   }
 
+  // Call the pledgeGift function to notify the event owner
+  Future<void> _pledgeGiftNotification() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      print('User is not logged in');
+      return;
+    }
+
+    final giftName = _nameController.text;
+    await pledgeGift(userId, widget.eventId, giftName);
+  }
+
+  Future<void> pledgeGift(String userId, String eventId, String giftName) async {
+    try {
+      // Fetch the event document
+      final eventDoc = await FirebaseFirestore.instance.collection('events').doc(eventId).get();
+      if (!eventDoc.exists) {
+        print('Error: Event document does not exist');
+        return;
+      }
+      final eventOwnerId = eventDoc.data()?['userId'];
+      if (eventOwnerId == null) {
+        print('Error: Event owner ID is missing');
+        return;
+      }
+
+      // Fetch the user document
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        print('Error: User document does not exist');
+        return;
+      }
+      final userName = userDoc.data()?['name'];
+      if (userName == null) {
+        print('Error: User name is missing');
+        return;
+      }
+
+      // Log the data
+      print('Event Owner ID: $eventOwnerId');
+      print('User Name: $userName');
+
+      // Notify the event owner about the gift pledge
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(eventOwnerId)
+          .collection('notifications')
+          .add({
+        'title': 'Gift Pledged',
+        'type': 'gift_pledged',
+        'message': '$userName has pledged your gift: $giftName.',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
+
+      print('Notification successfully created for $eventOwnerId');
+    } catch (e) {
+      print('Error in pledgeGift: $e');
+    }
+  }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Gift Details',
-            style: TextStyle(fontFamily: "Parkinsans")),
+        title: Text('My Gift Details', style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
       body: Form(
@@ -98,7 +161,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
               style: TextStyle(fontFamily: "Parkinsans"),
               decoration: InputDecoration(
                 labelText: 'Name',
-                labelStyle: TextStyle(fontFamily: "Parkinsans")
+                labelStyle: TextStyle(fontFamily: "Parkinsans"),
               ),
               validator: (value) => value!.isEmpty ? 'Name is required' : null,
             ),
@@ -129,18 +192,21 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                 labelStyle: TextStyle(fontFamily: "Parkinsans"),
               ),
               keyboardType: TextInputType.number,
-              validator: (value) =>
-              value!.isEmpty ? 'Price is required' : null,
+              validator: (value) => value!.isEmpty ? 'Price is required' : null,
             ),
             SizedBox(height: 16),
             SwitchListTile(
               title: Text('Pledged', style: TextStyle(fontFamily: "Parkinsans")),
               activeColor: Colors.blueAccent,
               value: _isPledged,
-              onChanged: _isPledged
-                  ? null
-                  : (value) {
-                setState(() => _isPledged = value);
+              onChanged: (value) {
+                setState(() {
+                  _isPledged = value;
+                  // Trigger the notification when the gift is pledged
+                  if (_isPledged) {
+                    _pledgeGiftNotification(); // Notify the event owner
+                  }
+                });
               },
             ),
             SizedBox(height: 20),

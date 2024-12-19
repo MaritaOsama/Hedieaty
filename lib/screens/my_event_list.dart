@@ -169,11 +169,12 @@ class _EventListPageState extends State<EventListPage> {
         name: name,
         category: category,
         date: date,
-        userId: user.uid, id: '', // Dynamically fetch the user UID
+        userId: user.uid,
+        id: '', // Dynamically fetch the user UID
       );
 
       // Save the event to Firestore under the user's UID
-      await FirebaseFirestore.instance.collection('events').add({
+      DocumentReference eventRef = await FirebaseFirestore.instance.collection('events').add({
         'name': event.name,
         'category': event.category,
         'date': event.date,
@@ -181,11 +182,47 @@ class _EventListPageState extends State<EventListPage> {
         'userId': event.userId, // Save the UID to Firestore
       });
 
+      // Notify friends about the new event
+      _sendEventNotifications(user.uid, event.name);
+
       // Refresh the event list after adding an event
       _loadEvents();
     } else {
       // Handle the case where the user is not logged in
       print('No user is logged in!');
+    }
+  }
+
+  Future<void> _sendEventNotifications(String userId, String eventName) async {
+    // Get user document to fetch user's name
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final userName = userDoc.data()?['name'];
+
+    if (userName != null) {
+      // Get the friends of the user
+      final friendsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('friends')
+          .get();
+
+      // Notify each friend about the event creation
+      for (var friendDoc in friendsSnapshot.docs) {
+        final friendId = friendDoc.id;
+
+        // Add notification to friend's notifications collection
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(friendId)
+            .collection('notifications')
+            .add({
+          'title': 'New Event Created',
+          'type': 'event_created',
+          'message': '$userName has created a new event: $eventName.',
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+        });
+      }
     }
   }
 

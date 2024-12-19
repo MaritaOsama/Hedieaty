@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'friend_event_list_page.dart';
 import 'my_event_list.dart';
+import 'notification_list.dart';
 import 'profile.dart';
 
 class Friend {
@@ -121,16 +122,74 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.blueAccent,
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.search,
-              size: 30,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              // Search logic goes here
-            },
-          )
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications,
+                  size: 30,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(currentUserId: currentUserUid), // Pass currentUserId
+                    ),
+                  );
+                },
+              ),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUserUid)
+                    .collection('notifications')
+                    .where('isRead', isEqualTo: false)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return Container();
+                  final newNotificationCount = snapshot.data!.docs.length;
+
+                  // Show pop-up notification (SnackBar or Dialog) when a new notification is added
+                  Future.delayed(Duration.zero, () {
+                    if (newNotificationCount > 0) {
+                      // Show a SnackBar or any custom popup
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$newNotificationCount new notifications'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  });
+
+                  return Positioned(
+                    right: 11,
+                    top: 11,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        '$newNotificationCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
       body: Padding(
@@ -249,6 +308,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+
 
   // Function to show dialog for adding a friend
   void _showAddFriendDialog(BuildContext context) {

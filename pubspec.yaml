@@ -46,6 +46,8 @@ dependencies:
   # Firebase Authentication
   firebase_auth: ^5.3.3
 
+  overlay_support: ^2.0.1
+
 
 dev_dependencies:
   flutter_test:
