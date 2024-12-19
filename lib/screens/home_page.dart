@@ -192,8 +192,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: StreamBuilder<List<Friend>>(
             stream: _friendsStream,
@@ -258,7 +257,6 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-      ) ,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showAddFriendDialog(context);

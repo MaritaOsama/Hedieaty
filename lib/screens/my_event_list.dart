@@ -237,8 +237,7 @@ class _EventListPageState extends State<EventListPage> {
         title: Text("My Event List", style: TextStyle(fontFamily: "Parkinsans"),),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        child: Column(
+      body: Column(
           children: [
             // Header Section
             Container(
@@ -342,7 +341,6 @@ class _EventListPageState extends State<EventListPage> {
             ),
           ],
         ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddEventDialog,
         child: Icon(Icons.add),

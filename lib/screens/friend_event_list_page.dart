@@ -115,8 +115,7 @@ class _FEventListPageState extends State<FEventListPage> {
         ),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        child: isLoading
+      body: isLoading
             ? Center(child: CircularProgressIndicator())
             : Column(
           children: [
@@ -244,7 +243,6 @@ class _FEventListPageState extends State<FEventListPage> {
             ),
           ],
         ),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
           switch (index) {

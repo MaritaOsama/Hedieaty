@@ -217,8 +217,7 @@ class _GiftListPageState extends State<GiftListPage> {
         title: Text("${widget.eventName} Gift List", style: TextStyle(fontFamily: "Parkinsans")),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        child: Column(
+      body: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -280,7 +279,6 @@ class _GiftListPageState extends State<GiftListPage> {
             ),
           ],
         ),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
           switch (index) {
