@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import 'my_gift_list.dart';
+
 class GiftDetailsPage extends StatefulWidget {
   final String eventId;
   final String giftId;
@@ -63,8 +65,20 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gift details updated successfully!')),
       );
+
+      // Navigate to Gift List Page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GiftListPage(
+            eventId: widget.eventId,
+            eventName: "Event Name", // Pass the appropriate event name here
+          ),
+        ),
+      );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

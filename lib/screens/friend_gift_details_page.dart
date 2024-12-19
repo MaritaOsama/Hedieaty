@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'friend_gift_list.dart';
+
 
   class FGiftDetailsPage extends StatefulWidget {
     final String eventId;
@@ -43,7 +45,6 @@ import 'package:flutter/material.dart';
 
     Future<void> _pledgeGift() async {
       if (!_isPledged) {
-        // Get the current user's ID
         final currentUser = FirebaseAuth.instance.currentUser;
         final currentUserUid = currentUser?.uid;
 
@@ -54,7 +55,6 @@ import 'package:flutter/material.dart';
           return;
         }
 
-        // Fetch the current user's name from Firestore
         String? currentUserName;
         try {
           final userDoc = await FirebaseFirestore.instance
@@ -87,11 +87,19 @@ import 'package:flutter/material.dart';
               .doc(widget.giftId)
               .update({
             'isPledged': true,
-            'pledger': currentUserName, // Save the user's name
+            'pledger': currentUserName,
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('You have pledged this gift!')),
+          );
+
+          // Navigate to the Gift List page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FGiftListPage(eventId: widget.eventId, eventName: "Event Name"),
+            ),
           );
         } catch (e) {
           setState(() => _isPledged = false);
@@ -101,6 +109,7 @@ import 'package:flutter/material.dart';
         }
       }
     }
+
 
 
 
