@@ -175,9 +175,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     leading: CircleAvatar(
-                      backgroundImage: friend.avatar.startsWith('http')
-                          ? NetworkImage(friend.avatar)
-                          : AssetImage(friend.avatar) as ImageProvider,
+                      radius: 40,
+                      backgroundImage: AssetImage("asset/images/person icon.jpg"),
                     ),
                     trailing: Icon(
                       Icons.arrow_forward_ios,
