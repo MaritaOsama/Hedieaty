@@ -108,32 +108,137 @@ import 'package:flutter/material.dart';
     Widget build(BuildContext context) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Friend\'s Gift Details', style: TextStyle(fontFamily: "Parkinsans")),
+          title: Text(
+            'Friend\'s Gift Details',
+            style: TextStyle(fontFamily: "Parkinsans"),
+          ),
           backgroundColor: Colors.blueAccent,
         ),
         body: _giftData == null
             ? Center(child: CircularProgressIndicator())
-            : Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Name: ${_giftData!['name']}', style: TextStyle(fontFamily: "Parkinsans", fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Description: ${_giftData!['description']}', style: TextStyle(fontFamily: "Parkinsans")),
-              SizedBox(height: 8),
-              Text('Category: ${_giftData!['category']}', style: TextStyle(fontFamily: "Parkinsans")),
-              SizedBox(height: 8),
-              Text('Price: ${_giftData!['price']}', style: TextStyle(fontFamily: "Parkinsans")),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isPledged ? null : _pledgeGift,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                ),
-                child: Text(_isPledged ? 'Pledged' : 'Pledge', style: TextStyle(fontFamily: "Parkinsans")),
+            : Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent.shade100, Colors.blueAccent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
               ),
-            ],
+              elevation: 4.0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Gift Details',
+                        style: TextStyle(
+                          fontFamily: "Parkinsans",
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Icon(Icons.card_giftcard, color: Colors.blueAccent),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Name: ${_giftData!['name']}',
+                            style: TextStyle(
+                              fontFamily: "Parkinsans",
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.description, color: Colors.blueAccent),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Description: ${_giftData!['description']}',
+                            style: TextStyle(
+                              fontFamily: "Parkinsans",
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.category, color: Colors.blueAccent),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Category: ${_giftData!['category']}',
+                            style: TextStyle(
+                              fontFamily: "Parkinsans",
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.attach_money, color: Colors.blueAccent),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Price: ${_giftData!['price']}',
+                            style: TextStyle(
+                              fontFamily: "Parkinsans",
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _isPledged ? null : _pledgeGift,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: Text(
+                          _isPledged ? 'Pledged' : 'Pledge',
+                          style: TextStyle(
+                            fontFamily: "Parkinsans",
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       );
