@@ -1,6 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:hedieaty/controllers/user_controller.dart'; // Import the Controller
 import 'home_page.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -13,60 +12,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
 
-  // Firebase Auth instance
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  // Firestore instance
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late SignUpController _controller; // Declare the controller
 
-  // Sign up function
-  Future<User?> signup(String email, String password) async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      print('Error: ${e.message}');
-      return null;
-    }
-  }
-
-  Future<void> saveUserdata(String name, String email, String password) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      String uid = user.uid;
-      FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'name': name,
-        'email': email,
-        'password': password,
-      });
-    }
-  }
-
-  // Sign up handler
-  Future<void> signUp() async {
-    String email = emailController.text;
-    String password = passwordController.text;
-    String name = nameController.text;
-
-    // Call the signup function
-    User? user = await signup(email, password);
-
-    if (user != null) {
-      // Save user data to Firestore
-      await saveUserdata(name, email, password);
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("User signed up successfully!")));
-
-      // Redirect to HomePage after successful sign-up
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()), // Replace HomePage() with your actual home page widget
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error signing up!")));
-    }
+  @override
+  void initState() {
+    super.initState();
+    _controller = SignUpController(
+      context: context,
+      emailController: emailController,
+      passwordController: passwordController,
+      nameController: nameController,
+    );
   }
 
   @override
@@ -78,7 +34,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Sign Up title with icon
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -96,8 +51,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
               SizedBox(height: 60),
-
-              // Name field
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -109,8 +62,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               SizedBox(height: 20),
-
-              // Email field
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -123,8 +74,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 keyboardType: TextInputType.emailAddress,
               ),
               SizedBox(height: 20),
-
-              // Password field
               TextField(
                 controller: passwordController,
                 decoration: InputDecoration(
@@ -137,12 +86,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: true,
               ),
               SizedBox(height: 30),
-
-              // Sign Up button
               ElevatedButton(
                 onPressed: () {
-                  // Call the signUp method using the text controllers' values
-                  signUp();
+                  _controller.signUp(); // Call the controller's sign-up method
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,

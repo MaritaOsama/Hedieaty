@@ -1,39 +1,32 @@
-class User {
-  int? id;
-  String firstName;
-  String lastName;
-  String? number;
-  String email;
-  String password;
-  String image;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-  User({
-    this.id,
-    required this.firstName,
-    required this.lastName,
-    this.number,
-    required this.email,
-    required this.password,
-    required this.image,
-  });
+class UserModel{
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  factory User.fromMap(Map<String, dynamic> json) => User(
-    id: json['ID'],
-    firstName: json['FIRST_NAME'],
-    lastName: json['LAST_NAME'],
-    number: json['NUMBER'],
-    email: json['EMAIL'],
-    password: json['PASSWORD'],
-    image: json['IMAGE'],
-  );
+  Future<User?> signup(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      print('Error: ${e.message}');
+      return null;
+    }
+  }
 
-  Map<String, dynamic> toMap() => {
-    'ID': id,
-    'FIRST_NAME': firstName,
-    'LAST_NAME': lastName,
-    'NUMBER': number,
-    'EMAIL': email,
-    'PASSWORD': password,
-    'IMAGE': image,
-  };
+  Future<void> saveUserdata(String name, String email, String password) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      String uid = user.uid;
+      await _firestore.collection('users').doc(uid).set({
+        'name': name,
+        'email': email,
+        'password': password,
+      });
+    }
+  }
 }
