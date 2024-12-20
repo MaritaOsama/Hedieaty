@@ -1,25 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Friend {
-  final String id;
-  final String name;
-  final String avatar;
-  final int upcomingEvents;
+  int userId;
+  int friendId;
 
   Friend({
-    required this.id,
-    required this.name,
-    required this.avatar,
-    required this.upcomingEvents,
+    required this.userId,
+    required this.friendId,
   });
 
-  factory Friend.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Friend(
-      id: doc.id,
-      name: data['name'] ?? '',
-      avatar: data['avatar'] ?? '',
-      upcomingEvents: 0,
-    );
-  }
+  factory Friend.fromMap(Map<String, dynamic> json) => Friend(
+    userId: json['USER_ID'],
+    friendId: json['FRIEND_ID'],
+  );
+
+  Map<String, dynamic> toMap() => {
+    'USER_ID': userId,
+    'FRIEND_ID': friendId,
+  };
 }
