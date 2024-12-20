@@ -1,39 +1,25 @@
 class Gift {
-  int? id;
+  String id;
   String name;
-  String? description;
-  String? category;
-  double? price;
-  String? image;
+  String category;
   bool isPledged;
 
-  Gift({
-    this.id,
-    required this.name,
-    this.description,
-    this.category,
-    this.price,
-    this.image,
-    required this.isPledged,
-  });
+  Gift({required this.id, required this.name, required this.category, this.isPledged = false});
 
-  factory Gift.fromMap(Map<String, dynamic> json) => Gift(
-    id: json['ID'],
-    name: json['NAME'],
-    description: json['DESCRIPTION'],
-    category: json['CATEGORY'],
-    price: json['PRICE'],
-    image: json['IMAGE'],
-    isPledged: json['ISPLEDGED']
-  );
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'category': category,
+      'isPledged': isPledged,
+    };
+  }
 
-  Map<String, dynamic> toMap() => {
-    'ID': id,
-    'NAME': name,
-    'DESCRIPTION': description,
-    'CATEGORY': category,
-    'PRICE': price,
-    'IMAGE': image,
-    'ISPLEDGED': isPledged,
-  };
+  factory Gift.fromMap(String id, Map<String, dynamic> map) {
+    return Gift(
+      id: id,
+      name: map['name'] ?? '',
+      category: map['category'] ?? '',
+      isPledged: map['isPledged'] ?? false,
+    );
+  }
 }

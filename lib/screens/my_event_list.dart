@@ -1,42 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/screens/profile.dart';
-import 'home_page.dart';
+import 'package:hedieaty/models/list_events_model.dart';
+import 'package:hedieaty/controllers/list_events_controller.dart';
 import 'my_gift_list.dart';
-
-final FirebaseAuth _auth = FirebaseAuth.instance;
-User? currentUser = _auth.currentUser;
-String? userId = currentUser?.uid;
-
-class Event {
-  String id;
-  String name;
-  String category;
-  DateTime date;
-  String status;
-  String userId;
-
-  Event({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.date,
-    required this.userId,
-  }) : status = _determineStatus(date);
-
-  static String _determineStatus(DateTime date) {
-    final now = DateTime.now();
-    if (date.isAfter(now)) {
-      return "Upcoming";
-    } else if (date.isBefore(now)) {
-      return "Past";
-    } else {
-      return "Current";
-    }
-  }
-}
-
+import 'home_page.dart';
+import 'profile.dart';
 
 class EventListPage extends StatefulWidget {
   @override
@@ -44,8 +12,9 @@ class EventListPage extends StatefulWidget {
 }
 
 class _EventListPageState extends State<EventListPage> {
+  final EventController _eventController = EventController();
   List<Event> events = [];
-  String sortBy = "name"; // Default sorting criteria
+  String sortBy = "name";
 
   @override
   void initState() {
@@ -53,36 +22,16 @@ class _EventListPageState extends State<EventListPage> {
     _loadEvents();
   }
 
-
-  // Load events from Firestore
   void _loadEvents() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('events')
-          .where('userId', isEqualTo: user.uid)
-          .get();
-
-      List<Event> fetchedEvents = snapshot.docs.map((doc) {
-        return Event(
-          id: doc.id,  // Save the Firestore document ID
-          name: doc['name'],
-          category: doc['category'],
-          date: (doc['date'] as Timestamp).toDate(),
-          userId: doc['userId'],
-        );
-      }).toList();
-
+    try {
+      final fetchedEvents = await _eventController.fetchEvents();
       setState(() {
         events = fetchedEvents;
       });
-    } else {
-      print('No user is logged in!');
+    } catch (e) {
+      print('Error fetching events: $e');
     }
   }
-
-
-
 
   void _sortEvents(String criteria) {
     setState(() {
@@ -97,7 +46,6 @@ class _EventListPageState extends State<EventListPage> {
     });
   }
 
-  // Add event dialog
   void _showAddEventDialog() {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController categoryController = TextEditingController();
@@ -107,21 +55,19 @@ class _EventListPageState extends State<EventListPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Event', style: TextStyle(fontFamily: "Parkinsans"),),
+          title: Text('Add Event'),
           content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                key: Key('event_name_field'),
                 controller: nameController,
                 decoration: InputDecoration(labelText: 'Event Name'),
               ),
               TextField(
-                key: Key('event_category_field'),
                 controller: categoryController,
                 decoration: InputDecoration(labelText: 'Category'),
               ),
               ListTile(
-                key: Key('event_date_field'),
                 title: Text("Date: ${selectedDate.toLocal()}"),
                 trailing: Icon(Icons.calendar_today),
                 onTap: () async {
@@ -142,22 +88,26 @@ class _EventListPageState extends State<EventListPage> {
           ),
           actions: [
             TextButton(
-              key: Key('save_event_button'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.deepPurple)),
             ),
             TextButton(
               onPressed: () {
                 if (nameController.text.isNotEmpty &&
                     categoryController.text.isNotEmpty) {
-                  // Save event to Firebase
-                  _saveEvent(nameController.text, categoryController.text, selectedDate);
+                  Event newEvent = Event(
+                    id: '',
+                    name: nameController.text,
+                    category: categoryController.text,
+                    date: selectedDate,
+                    userId: FirebaseAuth.instance.currentUser!.uid,
+                  );
+                  _eventController.saveEvent(newEvent);
+                  _loadEvents();
                   Navigator.pop(context);
                 }
               },
-              child: Text('Save'),
+              child: Text('Save', style: TextStyle(color: Colors.deepPurple)),
             ),
           ],
         );
@@ -165,214 +115,128 @@ class _EventListPageState extends State<EventListPage> {
     );
   }
 
-  void _saveEvent(String name, String category, DateTime date) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // Create the event object with the current user's UID
-      Event event = Event(
-        name: name,
-        category: category,
-        date: date,
-        userId: user.uid,
-        id: '', // Dynamically fetch the user UID
-      );
-
-      // Save the event to Firestore under the user's UID
-      DocumentReference eventRef = await FirebaseFirestore.instance.collection('events').add({
-        'name': event.name,
-        'category': event.category,
-        'date': event.date,
-        'status': event.status,
-        'userId': event.userId, // Save the UID to Firestore
-      });
-
-      // Notify friends about the new event
-      _sendEventNotifications(user.uid, event.name);
-
-      // Refresh the event list after adding an event
-      _loadEvents();
-    } else {
-      // Handle the case where the user is not logged in
-      print('No user is logged in!');
-    }
-  }
-
-  Future<void> _sendEventNotifications(String userId, String eventName) async {
-    // Get user document to fetch user's name
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    final userName = userDoc.data()?['name'];
-
-    if (userName != null) {
-      // Get the friends of the user
-      final friendsSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('friends')
-          .get();
-
-      // Notify each friend about the event creation
-      for (var friendDoc in friendsSnapshot.docs) {
-        final friendId = friendDoc.id;
-
-        // Add notification to friend's notifications collection
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(friendId)
-            .collection('notifications')
-            .add({
-          'title': 'New Event Created',
-          'type': 'event_created',
-          'message': '$userName has created a new event: $eventName.',
-          'timestamp': FieldValue.serverTimestamp(),
-          'isRead': false,
-        });
-      }
-    }
-  }
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Event List", style: TextStyle(fontFamily: "Parkinsans"),),
+        title: Text(
+          "My Event List",
+          style: TextStyle(
+            fontFamily: "Parkinsans",
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
-          children: [
-            // Header Section
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Center(
-                child: Text(
-                  "Explore Events",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: "Parkinsans"),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Dropdown for Sorting
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: DropdownButtonFormField<String>(
-                value: sortBy,
-                items: [
-                  DropdownMenuItem(value: 'name', child: Text('Sort by Name', style: TextStyle(fontFamily: "Parkinsans"))),
-                  DropdownMenuItem(value: 'category', child: Text('Sort by Category', style: TextStyle(fontFamily: "Parkinsans"))),
-                  DropdownMenuItem(value: 'status', child: Text('Sort by Status', style: TextStyle(fontFamily: "Parkinsans"))),
-                ],
-                onChanged: (String? value) {
-                  if (value != null) {
-                    _sortEvents(value);
-                  }
-                },
-                decoration: InputDecoration(
-                  labelText: "Sort Events",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+        children: [
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: DropdownButtonFormField<String>(
+              value: sortBy,
+              items: [
+                DropdownMenuItem(value: 'name', child: Text('Sort by Name')),
+                DropdownMenuItem(value: 'category', child: Text('Sort by Category')),
+                DropdownMenuItem(value: 'status', child: Text('Sort by Status')),
+              ],
+              onChanged: (value) {
+                if (value != null) _sortEvents(value);
+              },
+              decoration: InputDecoration(
+                labelText: "Sort Events",
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Colors.deepPurple),
               ),
             ),
-            SizedBox(height: 16),
-
-            // Event List
-            Expanded(
-              key: Key('events_list'),
-              child: events.isEmpty
-                  ? Center(child: Text("No events added yet"))
-                  : ListView.builder(
-                itemCount: events.length,
-                itemBuilder: (context, index) {
-                  final event = events[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Card(
-                      key: Key('event_card_1'),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.event,
-                          color: event.status == "Upcoming"
-                              ? Colors.green
-                              : event.status == "Past"
-                              ? Colors.grey
-                              : Colors.blue,
-                          size: 40,
-                        ),
-                        title: Text(
-                          event.name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text("${event.category} - ${event.status}", style: TextStyle(fontFamily: "Parkinsans")),
-                        trailing: Icon(Icons.arrow_forward_ios, size: 18),
-                        onTap: () async {
-                          // Fetch the event details using the event ID
-                          DocumentSnapshot doc = await FirebaseFirestore.instance
-                              .collection('events')
-                              .doc(event.id)  // Use the event ID to get the document
-                              .get();
-
-                          // Create an Event object with the data fetched from Firestore
-                          Event eventDetails = Event(
-                            id: doc.id,
-                            name: doc['name'],
-                            category: doc['category'],
-                            date: (doc['date'] as Timestamp).toDate(),
-                            userId: doc['userId'],
-                          );
-
-                          // Navigate to the GiftListPage with the event details
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GiftListPage(eventId: event.id, eventName: event.name),
-                            ),
-                          );
-                        },
+          ),
+          SizedBox(height: 10),
+          Expanded(
+            child: events.isEmpty
+                ? Center(child: Text("No events added yet"))
+                : ListView.builder(
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return Card(
+                  elevation: 5.0,
+                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(
+                      event.name,
+                      style: TextStyle(
+                        fontFamily: 'YourFontFamily', // Replace with your font family
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
-              ),
+                    subtitle: Text(
+                      "${event.category} - ${event.status}",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GiftListPage(
+                            eventId: event.id,
+                            eventName: event.name,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
-          ],
-        ),
-      floatingActionButton: FloatingActionButton(
-        key: Key('add_event_button'),
-        onPressed: _showAddEventDialog,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blueAccent,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
-              break;
-            case 1:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EventListPage()));
-              break;
-            case 2:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-              break;
-          }
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddEventDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.deepPurple,
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      selectedItemColor: Colors.deepPurple,
+      unselectedItemColor: Colors.grey,
+      currentIndex: 1, // Current page index for EventListPage
+      onTap: (index) {
+        switch (index) {
+          case 0:
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+            break;
+          case 1:
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => EventListPage()),
+            );
+            break;
+          case 2:
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => ProfilePage()),
+            );
+            break;
+        }
+      },
+      items: [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.event),
+          label: 'Events',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ],
     );
   }
 }

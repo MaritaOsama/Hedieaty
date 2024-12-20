@@ -1,31 +1,41 @@
-class ListEvent {
-  int? id;
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Event {
+  String id;
   String name;
-  int? listDetailsId;
-  int userId;
+  String category;
+  DateTime date;
   String status;
+  String userId;
 
-  ListEvent({
-    this.id,
+  Event({
+    required this.id,
     required this.name,
-    this.listDetailsId,
+    required this.category,
+    required this.date,
     required this.userId,
-    this.status = 'open',
-  });
+  }) : status = _determineStatus(date);
 
-  factory ListEvent.fromMap(Map<String, dynamic> json) => ListEvent(
-    id: json['ID'],
-    name: json['NAME'],
-    listDetailsId: json['LIST_DETAILS_ID'],
-    userId: json['USER_ID'],
-    status: json['STATUS'],
-  );
+  static String _determineStatus(DateTime date) {
+    final now = DateTime.now();
+    if (date.isAfter(now)) {
+      return "Upcoming";
+    } else if (date.isBefore(now)) {
+      return "Past";
+    } else {
+      return "Current";
+    }
+  }
 
-  Map<String, dynamic> toMap() => {
-    'ID': id,
-    'NAME': name,
-    'LIST_DETAILS_ID': listDetailsId,
-    'USER_ID': userId,
-    'STATUS': status,
-  };
+  // Create an Event object from Firestore data
+  factory Event.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Event(
+      id: doc.id,
+      name: data['name'],
+      category: data['category'],
+      date: (data['date'] as Timestamp).toDate(),
+      userId: data['userId'],
+    );
+  }
 }

@@ -1,37 +1,61 @@
-import 'package:sqflite/sqflite.dart';
-import '/models/list_events_model.dart';
-import '/localDB/database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hedieaty/models/list_events_model.dart';
 
-class ListEventController {
-  final DatabaseClass dbHelper = DatabaseClass();
+class EventController {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<int> addListEvent(ListEvent listEvent) async {
-    Database? db = await dbHelper.myDB;
-    return await db!.insert('List_Events', listEvent.toMap());
+  Future<List<Event>> fetchEvents() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is logged in!');
+    }
+
+    QuerySnapshot snapshot = await _firestore
+        .collection('events')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    return snapshot.docs.map((doc) => Event.fromFirestore(doc)).toList();
   }
 
-  Future<List<ListEvent>> getListEvents() async {
-    Database? db = await dbHelper.myDB;
-    final List<Map<String, dynamic>> result = await db!.query('List_Events');
-    return result.map((data) => ListEvent.fromMap(data)).toList();
+  Future<void> saveEvent(Event event) async {
+    await _firestore.collection('events').add({
+      'name': event.name,
+      'category': event.category,
+      'date': event.date,
+      'status': event.status,
+      'userId': event.userId,
+    });
   }
 
-  Future<int> updateListEvent(ListEvent listEvent) async {
-    Database? db = await dbHelper.myDB;
-    return await db!.update(
-      'List_Events',
-      listEvent.toMap(),
-      where: 'ID = ?',
-      whereArgs: [listEvent.id],
-    );
-  }
+  Future<void> sendEventNotifications(String userId, String eventName) async {
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final userName = userDoc.data()?['name'];
 
-  Future<int> deleteListEvent(int id) async {
-    Database? db = await dbHelper.myDB;
-    return await db!.delete(
-      'List_Events',
-      where: 'ID = ?',
-      whereArgs: [id],
-    );
+    if (userName != null) {
+      final friendsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('friends')
+          .get();
+
+      for (var friendDoc in friendsSnapshot.docs) {
+        final friendId = friendDoc.id;
+
+        await _firestore
+            .collection('users')
+            .doc(friendId)
+            .collection('notifications')
+            .add({
+          'title': 'New Event Created',
+          'type': 'event_created',
+          'message': '$userName has created a new event: $eventName.',
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+        });
+      }
+    }
   }
 }
