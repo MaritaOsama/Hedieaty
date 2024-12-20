@@ -5,8 +5,6 @@ import 'package:hedieaty/screens/notification_list.dart';
 import 'screens/friend_event_list_page.dart';
 import 'screens/friend_gift_details_page.dart';
 import 'screens/friend_gift_list.dart';
-import 'screens/login_page.dart';
-import 'screens/signup_page.dart';
 import 'screens/welcome_page.dart';
 import 'screens/home_page.dart';
 import 'screens/my_gift_details.dart';
@@ -19,6 +17,13 @@ import 'screens/login2.dart';
 
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(HedieatyApp());
+}
+
+// Function for integration tests
+Future<void> mainTest() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(HedieatyApp());

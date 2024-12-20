@@ -193,6 +193,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: Padding(
+          key: Key('friends_list'),
           padding: const EdgeInsets.all(8.0),
           child: StreamBuilder<List<Friend>>(
             stream: _friendsStream,
@@ -258,6 +259,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       floatingActionButton: FloatingActionButton(
+        key: Key('add_friend_button'),
         onPressed: () {
           _showAddFriendDialog(context);
         },
@@ -297,6 +299,7 @@ class _HomePageState extends State<HomePage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
+            key: Key('nav_events_button'),
             icon: Icon(Icons.event),
             label: 'Events',
           ),
@@ -321,11 +324,13 @@ class _HomePageState extends State<HomePage> {
         return AlertDialog(
           title: Text('Add a New Friend'),
           content: TextField(
+            key: Key('friend_name_field'),
             controller: _controller,
             decoration: InputDecoration(hintText: 'Enter friend\'s name'),
           ),
           actions: [
             TextButton(
+              key: Key('save_friend'),
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },

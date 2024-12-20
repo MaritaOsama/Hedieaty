@@ -111,14 +111,17 @@ class _EventListPageState extends State<EventListPage> {
           content: Column(
             children: [
               TextField(
+                key: Key('event_name_field'),
                 controller: nameController,
                 decoration: InputDecoration(labelText: 'Event Name'),
               ),
               TextField(
+                key: Key('event_category_field'),
                 controller: categoryController,
                 decoration: InputDecoration(labelText: 'Category'),
               ),
               ListTile(
+                key: Key('event_date_field'),
                 title: Text("Date: ${selectedDate.toLocal()}"),
                 trailing: Icon(Icons.calendar_today),
                 onTap: () async {
@@ -139,6 +142,7 @@ class _EventListPageState extends State<EventListPage> {
           ),
           actions: [
             TextButton(
+              key: Key('save_event_button'),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -280,6 +284,7 @@ class _EventListPageState extends State<EventListPage> {
 
             // Event List
             Expanded(
+              key: Key('events_list'),
               child: events.isEmpty
                   ? Center(child: Text("No events added yet"))
                   : ListView.builder(
@@ -289,6 +294,7 @@ class _EventListPageState extends State<EventListPage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Card(
+                      key: Key('event_card_1'),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -342,6 +348,7 @@ class _EventListPageState extends State<EventListPage> {
           ],
         ),
       floatingActionButton: FloatingActionButton(
+        key: Key('add_event_button'),
         onPressed: _showAddEventDialog,
         child: Icon(Icons.add),
         backgroundColor: Colors.blueAccent,

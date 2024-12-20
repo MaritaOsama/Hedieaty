@@ -82,12 +82,14 @@ class _GiftListPageState extends State<GiftListPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                key: Key('gift_name_field'),
                 decoration: InputDecoration(labelText: "Gift Name"),
                 onChanged: (value) {
                   newName = value;
                 },
               ),
               TextField(
+                key: Key('gift_category_field'),
                 decoration: InputDecoration(labelText: "Gift Category"),
                 onChanged: (value) {
                   newCategory = value;
@@ -97,6 +99,7 @@ class _GiftListPageState extends State<GiftListPage> {
           ),
           actions: [
             TextButton(
+              key: Key('save_gift_button'),
               onPressed: () async {
                 if (newName.isNotEmpty && newCategory.isNotEmpty) {
                   Gift newGift = Gift(id: '', name: newName, category: newCategory);
@@ -132,6 +135,7 @@ class _GiftListPageState extends State<GiftListPage> {
           content: Text("Are you sure you want to delete this gift?"),
           actions: [
             TextButton(
+              key: Key('confirm_delete_gift_button'),
               onPressed: () async {
                 try {
                   await giftsCollection.doc(giftId).delete();
@@ -168,10 +172,12 @@ class _GiftListPageState extends State<GiftListPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                key: Key('edit_gift_name_field'),
                 controller: nameController,
                 decoration: InputDecoration(labelText: "Gift Name"),
               ),
               TextField(
+                key: Key('edit_gift_category_field'),
                 controller: categoryController,
                 decoration: InputDecoration(labelText: "Gift Category"),
               ),
@@ -179,6 +185,7 @@ class _GiftListPageState extends State<GiftListPage> {
           ),
           actions: [
             TextButton(
+              key: Key('save_changed_gift_button'),
               onPressed: () async {
                 String newName = nameController.text;
                 String newCategory = categoryController.text;
@@ -239,6 +246,7 @@ class _GiftListPageState extends State<GiftListPage> {
                     ],
                   ),
                   ElevatedButton(
+                    key: Key('add_gift_button'),
                     onPressed: _addGift,
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
                     child: Text("Add Gift", style: TextStyle(fontFamily: "Parkinsans")),
@@ -247,6 +255,7 @@ class _GiftListPageState extends State<GiftListPage> {
               ),
             ),
             Expanded(
+              key: Key('gifts_list'),
               child: ListView.builder(
                 itemCount: gifts.length,
                 itemBuilder: (context, index) {

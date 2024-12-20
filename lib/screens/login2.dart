@@ -80,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Email field
               TextField(
+                key: Key('email_field'),
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
@@ -94,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Password field
               TextField(
+                key: Key('password_field'),
                 controller: passwordController,
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -108,6 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Login button
               ElevatedButton(
+                key: Key('login_button'),
                 onPressed: () {
                   // Call the signIn method using the text controllers' values
                   signIn();
