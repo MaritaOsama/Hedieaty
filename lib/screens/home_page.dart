@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -193,71 +194,71 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: Padding(
-          key: Key('friends_list'),
-          padding: const EdgeInsets.all(8.0),
-          child: StreamBuilder<List<Friend>>(
-            stream: _friendsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
+        key: Key('friends_list'),
+        padding: const EdgeInsets.all(8.0),
+        child: StreamBuilder<List<Friend>>(
+          stream: _friendsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No friends added yet.'));
-              }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No friends added yet.'));
+            }
 
-              final friends = snapshot.data!;
-              return ListView.builder(
-                itemCount: friends.length,
-                itemBuilder: (context, index) {
-                  final friend = friends[index];
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+            final friends = snapshot.data!;
+            return ListView.builder(
+              itemCount: friends.length,
+              itemBuilder: (context, index) {
+                final friend = friends[index];
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 5,
+                  child: ListTile(
+                    title: Text(
+                      friend.name,
+                      style: TextStyle(
+                        fontFamily: "Parkinsans",
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
-                    elevation: 5,
-                    child: ListTile(
-                      title: Text(
-                        friend.name,
-                        style: TextStyle(
-                          fontFamily: "Parkinsans",
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                    subtitle: Text(
+                      friend.upcomingEvents > 0
+                          ? 'Upcoming Events: ${friend.upcomingEvents}'
+                          : 'No Upcoming Events',
+                      style: TextStyle(
+                        fontFamily: "Parkinsans",
+                        color: Colors.grey[700],
                       ),
-                      subtitle: Text(
-                        friend.upcomingEvents > 0
-                            ? 'Upcoming Events: ${friend.upcomingEvents}'
-                            : 'No Upcoming Events',
-                        style: TextStyle(
-                          fontFamily: "Parkinsans",
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      leading: CircleAvatar(
-                        radius: 40,
-                        backgroundImage: AssetImage("asset/images/person icon.jpg"),
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.deepPurple,
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                FEventListPage(friendName: friend.name, friendId: friend.id),
-                          ),
-                        );
-                      },
                     ),
-                  );
-                },
-              );
-            },
-          ),
+                    leading: CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage("asset/images/person icon.jpg"),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.deepPurple,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              FEventListPage(friendName: friend.name, friendId: friend.id),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          },
         ),
+      ),
       floatingActionButton: FloatingActionButton(
         key: Key('add_friend_button'),
         onPressed: () {
